@@ -16,31 +16,32 @@ soporte y reuniones.
 
 ## Semana 0 · 20 nov 2026
 
-**Estado:** en curso
+**Estado:** cerrada
 **Objetivo:** dejar instalado el sistema de trabajo documental.
 
 | Comprometido | Prioridad | Estado |
 | --- | --- | --- |
-| Documentos base: `BACKLOG.md`, `AGENDA.md`, `HISTORIAL.md`, fichas y `AGENTS.md` | P2 | En curso |
-| TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json` | P2 | Listo |
+| Documentos base: `BACKLOG.md`, `AGENDA.md`, `HISTORIAL.md`, fichas y `AGENTS.md` | P2 | Hecho |
+| TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json` | P2 | En revisión |
 
 - **Fuera de alcance:** BUG-01 y REQ-01.
 - **Riesgos:** ninguno relevante.
-- **Cierre:** se completa el viernes 20/11.
+- **Cierre:** documentación creada y commiteada (`909eb27`). TEC-01 quedó parcial:
+  el ignore está hecho y falta decidir qué hacer con el diff de `package-lock.json`.
 
 ## Semana 1 · 23 al 27 nov 2026
 
-**Estado:** planificada
+**Estado:** en curso (adelantada al 20/11)
 **Objetivo:** estabilizar la reserva con acompañantes y decidir la salida de Docker.
 
 | Comprometido | Prioridad | Estado |
 | --- | --- | --- |
-| BUG-01 · Documento del acompañante no editable | P1 | Listo |
-| TEC-03 · ADR de despliegue sin Docker | P2 | Listo |
+| BUG-01 · Documento del acompañante no editable | P1 | En revisión |
+| TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
 
 - **Fuera de alcance:** implementación de REQ-01.
 - **Riesgos:**
-  - Falta confirmar navegador y frecuencia de BUG-01.
+  - Falta la prueba manual en Chrome con el flujo completo.
   - El ajuste de foco del `Modal` afecta a todos los diálogos: probar también
     equipos, operaciones y cuenta.
 - **Dependencias:** ninguna.

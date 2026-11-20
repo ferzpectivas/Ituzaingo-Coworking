@@ -52,38 +52,15 @@ justificación).
 
 | ID | Título | Tipo | Área | Prioridad | Est. | Estado | Semana | Ficha |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | Listo | 1 | [ficha](items/BUG-01.md) |
+| BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | En revisión | 1 | [ficha](items/BUG-01.md) |
 | REQ-01 | Quitar Docker del despliegue | req | infra | P2 | L | Refinado | 2 | [ficha](items/REQ-01.md) |
-| TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | Listo | 0 | — |
+| TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | En revisión | 0 | — |
 | TEC-02 | Actualizar README tras quitar Docker | tec | docs | P3 | S | Nuevo | 3 | — |
-| TEC-03 | ADR de despliegue sin Docker | tec | infra | P2 | S | Listo | 1 | [ADR-001](decisiones/ADR-001-sin-docker.md) |
+| TEC-03 | ADR de despliegue sin Docker | tec | infra | P2 | S | En revisión | 1 | [ADR-001](decisiones/ADR-001-sin-docker.md) |
 
 ## Listo
 
-### BUG-01 · No se puede escribir el documento del acompañante
-
-Al reservar y agregar acompañantes, el campo de número de documento no registra
-las teclas o pierde el foco.
-
-- **Hipótesis:** el `Modal` re-enfoca el panel en cada re-render
-  (`apps/web/src/components/ui/primitives.tsx:206-219`) y el estado de personas
-  está duplicado con `partySize` (`reservation-wizard.tsx:127-144`, `189-192`).
-- **Falta:** confirmar navegador y frecuencia de reproducción.
-- **Criterio de cierre:** se pueden completar los datos de 2 acompañantes y
-  agregar/quitar filas sin perder lo escrito.
-- Detalle en [`items/BUG-01.md`](items/BUG-01.md).
-
-### TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json`
-
-- `apps/api/data/` aparece como no trackeado: agregarlo a `.gitignore`.
-- Revisar el diff de `package-lock.json` y confirmar que corresponda a
-  `npm install`; descartarlo si es ruido.
-
-### TEC-03 · ADR de despliegue sin Docker
-
-Decidir el reemplazo de Docker Compose (proxy, TLS, units, backups y rollback)
-antes de implementar REQ-01. Documento en
-[`decisiones/ADR-001-sin-docker.md`](decisiones/ADR-001-sin-docker.md).
+Sin ítems.
 
 ## Refinado
 
@@ -109,7 +86,28 @@ Sin ítems.
 
 ## En revisión
 
-Sin ítems.
+### BUG-01 · No se puede escribir el documento del acompañante
+
+Corregido el robo de foco del `Modal` que interrumpía la escritura en el popup de
+nueva reserva (Chrome). Falta la prueba manual del flujo completo.
+
+- **Causa:** el efecto de `Modal` dependía de `onClose`, una función nueva en cada
+  render del wizard; cada tecla re-enfocaba el panel a los 30 ms.
+- **Cambio:** el efecto depende sólo de `open`, usa un ref para `onClose` y no
+  roba el foco si ya hay interacción dentro del diálogo.
+- **Pendiente:** verificar en Chrome con 2 acompañantes y probar los demás modales.
+- Detalle en [`items/BUG-01.md`](items/BUG-01.md).
+
+### TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json`
+
+- `apps/api/data/` ya está en `.gitignore` (verificado con `git check-ignore`).
+- El diff de `package-lock.json` son 84 líneas que quitan `libc: ["glibc"]` de
+  paquetes opcionales. Falta decidir si se revierte o se acepta.
+
+### TEC-03 · ADR de despliegue sin Docker
+
+ADR redactado en [`decisiones/ADR-001-sin-docker.md`](decisiones/ADR-001-sin-docker.md).
+Estado `Propuesto`: falta aprobar la opción de proxy/TLS antes de implementar REQ-01.
 
 ## Hecho
 

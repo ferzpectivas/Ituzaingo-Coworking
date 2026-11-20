@@ -1,7 +1,7 @@
 # BUG-01 · No se puede escribir el documento del acompañante
 
 - **Tipo:** bug
-- **Estado:** Listo
+- **Estado:** En revisión
 - **Prioridad:** P1
 - **Área:** web
 - **Estimación:** M
@@ -15,7 +15,7 @@ de acompañantes, no puede escribir en el campo de número de documento.
 
 ## Pasos para reproducir
 
-1. Ingresar con una cuenta de socio.
+1. Ingresar con una cuenta de socio en Chrome.
 2. Abrir el mapa y comenzar una reserva.
 3. Elegir ambiente, fecha y franja; avanzar al paso de personas.
 4. Agregar uno o más acompañantes.
@@ -28,36 +28,39 @@ acompañantes no borra los datos ya cargados.
 
 ## Resultado actual
 
-El campo de documento no registra las teclas o pierde el foco durante la carga.
+El campo registra un solo carácter y pierde el foco; el resto de las teclas no
+llega al input.
 
-## Hipótesis
+## Causa confirmada
 
-1. **Foco del modal:** `Modal` vuelve a enfocar el panel 30 ms después de cada
-   re-render porque el efecto depende de `onClose` y usa `setTimeout`
-   (`apps/web/src/components/ui/primitives.tsx:206-219`). Si el padre se
-   re-renderiza mientras se escribe (por ejemplo, por eventos SSE del mapa), el
-   foco se roba y el input deja de recibir teclas.
-2. **Estado duplicado:** la cantidad de personas vive en `people.length` y en
-   `partySize`; los efectos de sincronización pueden recortar filas y descartar
-   lo escrito (`apps/web/src/components/reservations/reservation-wizard.tsx:127-144`
-   y `189-192`).
+El efecto de apertura de `Modal` dependía de `onClose`, y `ReservationWizard` le
+pasa una función `close` nueva en cada render. Cada tecla re-renderiza el wizard,
+el efecto se vuelve a ejecutar y a los 30 ms hace `panelRef.current.focus()`, con
+lo que el input pierde el foco.
+
+- `apps/web/src/components/ui/primitives.tsx:206-219` (efecto de apertura)
+- `apps/web/src/components/reservations/reservation-wizard.tsx:331-334` (`close` inline)
+- `apps/web/src/components/map/map-workspace.tsx:420-431` (`onClose` inline)
+
+La hipótesis del estado duplicado (`people.length` vs. `partySize`) no fue la
+causa de este defecto; queda como observación para una revisión futura.
 
 ## Plan de trabajo
 
-- [ ] Reproducir en el entorno local con el rol socio y registrar navegador,
-      dispositivo y frecuencia.
-- [ ] Confirmar si el foco se pierde por el `Modal` o por el re-render del wizard.
-- [ ] Corregir el efecto del modal: enfocar sólo al abrir, sin depender de la
-      identidad de `onClose`.
-- [ ] Unificar la fuente de verdad de personas y tamaño del grupo.
-- [ ] Probar que agregar/quitar acompañantes no borre datos.
-- [ ] Ejecutar `npm run typecheck` y `npm run build`.
+- [x] Reproducir en Chrome, en el popup de "Nueva reserva".
+- [x] Confirmar que el foco se pierde por el efecto del `Modal`.
+- [x] Corregir el efecto: depende sólo de `open`, usa un ref para `onClose` y no
+      roba el foco si ya hay interacción dentro del diálogo.
+- [ ] Verificar en Chrome que se pueden escribir varios caracteres seguidos.
+- [ ] Probar agregar/quitar acompañantes sin perder datos.
+- [x] Ejecutar `npm run typecheck -w @ituzaingo/web` y
+      `npm run build -w @ituzaingo/web`.
 
 ## Archivos involucrados
 
 - `apps/web/src/components/ui/primitives.tsx`
 - `apps/web/src/components/reservations/reservation-wizard.tsx`
-- `apps/web/src/components/map/map-workspace.tsx` (origen probable de re-renders)
+- `apps/web/src/components/map/map-workspace.tsx`
 
 ## Criterios de aceptación
 
@@ -65,16 +68,18 @@ El campo de documento no registra las teclas o pierde el foco durante la carga.
 - [ ] Agregar y quitar acompañantes conserva los datos de las filas restantes.
 - [ ] La reserva con 2 acompañantes se crea correctamente desde el mapa.
 - [ ] Los demás modales (equipos, operaciones, cuenta) siguen funcionando.
-- [ ] `npm run typecheck` y `npm run build` pasan.
+- [x] `npm run typecheck -w @ituzaingo/web` y `npm run build -w @ituzaingo/web`
+      pasan.
 
-## Datos por confirmar
+## Datos de reproducción
 
-- Navegador y dispositivo donde se observó.
-- ¿Ocurre siempre o sólo con cierta cantidad de acompañantes?
-- ¿Pasa también fuera del mapa (por ejemplo, desde "Mis reservas")?
+- **Navegador:** Chrome.
+- **Lugar:** popup de "Nueva reserva" del mapa.
+- **Comportamiento:** se escribe un carácter y el foco vuelve al diálogo.
 
 ## Historial del ítem
 
 | Fecha | Estado | Nota |
 | --- | --- | --- |
 | 2026-11-20 | Listo | Relevado por el usuario; hipótesis inicial registrada. |
+| 2026-11-20 | En revisión | Causa confirmada y corregida en `Modal`; falta prueba manual en Chrome. |

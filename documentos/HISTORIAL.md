@@ -7,11 +7,24 @@ Cada entrada debe incluir fecha, ítem, estado, commit, cambios, verificación y
 notas. Los ítems cerrados también se reflejan en
 [`BACKLOG.md`](BACKLOG.md).
 
+## 2026-11-20 · BUG-01 — Foco del modal en el popup de reserva
+
+- **Ítems:** BUG-01.
+- **Estado:** En revisión.
+- **Commit:** `a95255e`
+- **Cambios:**
+  - `Modal` ya no re-ejecuta el efecto de apertura cuando cambia `onClose`: usa un
+    ref y depende sólo de `open`.
+  - El enfoque inicial no se aplica si el foco ya está dentro del diálogo.
+- **Verificación:** `npm run typecheck` y `npm run build` completos, sin errores.
+- **Notas:** falta la prueba manual en Chrome con 2 acompañantes y la revisión de
+  los demás modales. Al confirmarse, BUG-01 pasa a `Hecho`.
+
 ## 2026-11-20 · Semana 0 — Sistema de trabajo documental
 
 - **Ítems:** TEC-01 y documentación base.
-- **Estado:** Hecho (pendiente de commit).
-- **Commit:** pendiente de revisión.
+- **Estado:** Hecho.
+- **Commit:** `909eb27`
 - **Cambios:**
   - Se creó `AGENTS.md` raíz con contexto, comandos, reglas críticas, flujo de
     backlog, DoR/DoD y convenciones de commits.
