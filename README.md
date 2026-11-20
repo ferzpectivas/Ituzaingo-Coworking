@@ -348,8 +348,17 @@ apps/
     src/lib               cliente de API, tipos, formato
 deploy/Caddyfile          reverse proxy y TLS
 tools/floorplan           generador del manifiesto desde el SVG
-data/                     estado persistido (fuera de Git)
+apps/api/data/            estado persistido (fuera de Git)
 ```
+
+### Documentación de trabajo
+
+- [`AGENTS.md`](AGENTS.md): guía de trabajo para agentes y colaboradores.
+- [`documentos/BACKLOG.md`](documentos/BACKLOG.md): requerimientos, bugs y deuda
+  técnica, con estado, prioridad y estimación.
+- [`documentos/AGENDA.md`](documentos/AGENDA.md): sprints semanales y objetivos.
+- [`documentos/HISTORIAL.md`](documentos/HISTORIAL.md): registro cronológico de
+  los trabajos realizados.
 
 ---
 

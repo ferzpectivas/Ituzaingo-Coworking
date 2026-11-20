@@ -13,5 +13,8 @@ Thumbs.db
 data/*
 !data/.gitkeep
 !data/seed/
+
+# Estado persistido de la API (datos personales, fuera de Git)
+apps/api/data/
 apps/api/src/floorplan/floorplan.generated.json
 apps/web/src/lib/floorplan.generated.json
