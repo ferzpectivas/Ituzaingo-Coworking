@@ -1,0 +1,21 @@
+# Caddy publica la web y la API bajo el mismo origen: /api/* va a la API y el
+# resto a Next.js. Con un dominio real Caddy gestiona el certificado TLS solo.
+{$DOMAIN::80} {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+}

@@ -1,0 +1,23 @@
+{
+  "name": "ituzaingo-coworking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma de gestión y reservas del Espacio de Coworking de Ituzaingó",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev -w @ituzaingo/api",
+    "dev:web": "npm run dev -w @ituzaingo/web",
+    "build": "npm run floorplan && npm run build -w @ituzaingo/api && npm run build -w @ituzaingo/web",
+    "start": "concurrently -n api,web -c cyan,green \"npm:start:api\" \"npm:start:web\"",
+    "start:api": "npm run start -w @ituzaingo/api",
+    "start:web": "npm run start -w @ituzaingo/web",
+    "floorplan": "node tools/floorplan/build-floorplan.mjs",
+    "typecheck": "npm run typecheck -w @ituzaingo/api && npm run typecheck -w @ituzaingo/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

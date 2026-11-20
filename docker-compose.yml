@@ -1,0 +1,66 @@
+name: coworking-ituzaingo
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    image: coworking-ituzaingo-api:1.0.0
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      DATA_DIR: /data
+      # Origen público de la web (para CORS y cookies). Sin barra final.
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost}
+      JWT_SECRET: ${JWT_SECRET:?Definí JWT_SECRET en el archivo .env antes de desplegar}
+      PERSONAL_DATA_KEY: ${PERSONAL_DATA_KEY:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # Dejar en true sólo en el primer arranque; después pasar a false.
+      SEED_ON_START: ${SEED_ON_START:-true}
+    volumes:
+      - coworking-data:/data
+    expose:
+      - '4000'
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api/v1}
+    image: coworking-ituzaingo-web:1.0.0
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    depends_on:
+      api:
+        condition: service_healthy
+    expose:
+      - '3000'
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
+      api:
+        condition: service_healthy
+    environment:
+      # Ejemplos: ":80" para pruebas por IP, "coworking.ituzaingo.gob.ar" para HTTPS automático.
+      DOMAIN: ${DOMAIN:-:80}
+    ports:
+      - '${HTTP_PORT:-80}:80'
+      - '${HTTPS_PORT:-443}:443'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  coworking-data:
+  caddy-data:
+  caddy-config:
