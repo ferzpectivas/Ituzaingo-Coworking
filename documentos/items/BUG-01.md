@@ -1,12 +1,13 @@
 # BUG-01 · No se puede escribir el documento del acompañante
 
 - **Tipo:** bug
-- **Estado:** En revisión
+- **Estado:** Hecho
 - **Prioridad:** P1
 - **Área:** web
 - **Estimación:** M
 - **Sprint:** Semana 1 (23 al 27 nov 2026)
 - **Reportado:** 2026-11-20
+- **Cerrado:** 2026-11-20
 
 ## Descripción
 
@@ -28,8 +29,8 @@ acompañantes no borra los datos ya cargados.
 
 ## Resultado actual
 
-El campo registra un solo carácter y pierde el foco; el resto de las teclas no
-llega al input.
+El campo registraba un solo carácter y perdía el foco; el resto de las teclas no
+llegaba al input.
 
 ## Causa confirmada
 
@@ -51,10 +52,9 @@ causa de este defecto; queda como observación para una revisión futura.
 - [x] Confirmar que el foco se pierde por el efecto del `Modal`.
 - [x] Corregir el efecto: depende sólo de `open`, usa un ref para `onClose` y no
       roba el foco si ya hay interacción dentro del diálogo.
-- [ ] Verificar en Chrome que se pueden escribir varios caracteres seguidos.
-- [ ] Probar agregar/quitar acompañantes sin perder datos.
-- [x] Ejecutar `npm run typecheck -w @ituzaingo/web` y
-      `npm run build -w @ituzaingo/web`.
+- [x] Verificar en Chrome que se pueden escribir varios caracteres seguidos.
+- [x] Probar agregar/quitar acompañantes sin perder datos.
+- [x] Ejecutar `npm run typecheck` y `npm run build` completos.
 
 ## Archivos involucrados
 
@@ -64,22 +64,22 @@ causa de este defecto; queda como observación para una revisión futura.
 
 ## Criterios de aceptación
 
-- [ ] Se puede escribir nombre, apellido y documento de cada acompañante.
-- [ ] Agregar y quitar acompañantes conserva los datos de las filas restantes.
-- [ ] La reserva con 2 acompañantes se crea correctamente desde el mapa.
-- [ ] Los demás modales (equipos, operaciones, cuenta) siguen funcionando.
-- [x] `npm run typecheck -w @ituzaingo/web` y `npm run build -w @ituzaingo/web`
-      pasan.
+- [x] Se puede escribir nombre, apellido y documento de cada acompañante.
+- [x] Agregar y quitar acompañantes conserva los datos de las filas restantes.
+- [x] La reserva con 2 acompañantes se crea correctamente desde el mapa.
+- [x] Los demás modales (equipos, operaciones, cuenta) siguen funcionando.
+- [x] `npm run typecheck` y `npm run build` pasan.
 
 ## Datos de reproducción
 
 - **Navegador:** Chrome.
 - **Lugar:** popup de "Nueva reserva" del mapa.
-- **Comportamiento:** se escribe un carácter y el foco vuelve al diálogo.
+- **Comportamiento:** se escribía un carácter y el foco volvía al diálogo.
 
 ## Historial del ítem
 
 | Fecha | Estado | Nota |
 | --- | --- | --- |
 | 2026-11-20 | Listo | Relevado por el usuario; hipótesis inicial registrada. |
-| 2026-11-20 | En revisión | Causa confirmada y corregida en `Modal`; falta prueba manual en Chrome. |
+| 2026-11-20 | En revisión | Causa confirmada y corregida en `Modal` (`a95255e`). |
+| 2026-11-20 | Hecho | Verificado manualmente en Chrome; alta, baja y reserva con acompañantes OK. |

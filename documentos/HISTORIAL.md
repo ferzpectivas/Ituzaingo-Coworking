@@ -7,6 +7,17 @@ Cada entrada debe incluir fecha, ítem, estado, commit, cambios, verificación y
 notas. Los ítems cerrados también se reflejan en
 [`BACKLOG.md`](BACKLOG.md).
 
+## 2026-11-20 · BUG-01 — Verificación y cierre
+
+- **Ítems:** BUG-01.
+- **Estado:** Hecho.
+- **Commit:** sin cambios de código; verificación sobre `a95255e`.
+- **Cambios:** ninguno.
+- **Verificación:** el usuario probó en Chrome el popup de nueva reserva:
+  escritura fluida con acompañantes, alta y baja de filas y creación de la reserva.
+  También se revisaron los demás modales.
+- **Notas:** BUG-01 cerrado.
+
 ## 2026-11-20 · BUG-01 — Foco del modal en el popup de reserva
 
 - **Ítems:** BUG-01.

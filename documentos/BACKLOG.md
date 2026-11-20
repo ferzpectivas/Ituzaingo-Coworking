@@ -52,7 +52,7 @@ justificación).
 
 | ID | Título | Tipo | Área | Prioridad | Est. | Estado | Semana | Ficha |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | En revisión | 1 | [ficha](items/BUG-01.md) |
+| BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | Hecho | 1 | [ficha](items/BUG-01.md) |
 | REQ-01 | Quitar Docker del despliegue | req | infra | P2 | L | Refinado | 2 | [ficha](items/REQ-01.md) |
 | TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | En revisión | 0 | — |
 | TEC-02 | Actualizar README tras quitar Docker | tec | docs | P3 | S | Nuevo | 3 | — |
@@ -86,18 +86,6 @@ Sin ítems.
 
 ## En revisión
 
-### BUG-01 · No se puede escribir el documento del acompañante
-
-Corregido el robo de foco del `Modal` que interrumpía la escritura en el popup de
-nueva reserva (Chrome). Falta la prueba manual del flujo completo.
-
-- **Causa:** el efecto de `Modal` dependía de `onClose`, una función nueva en cada
-  render del wizard; cada tecla re-enfocaba el panel a los 30 ms.
-- **Cambio:** el efecto depende sólo de `open`, usa un ref para `onClose` y no
-  roba el foco si ya hay interacción dentro del diálogo.
-- **Pendiente:** verificar en Chrome con 2 acompañantes y probar los demás modales.
-- Detalle en [`items/BUG-01.md`](items/BUG-01.md).
-
 ### TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json`
 
 - `apps/api/data/` ya está en `.gitignore` (verificado con `git check-ignore`).
@@ -110,6 +98,14 @@ ADR redactado en [`decisiones/ADR-001-sin-docker.md`](decisiones/ADR-001-sin-doc
 Estado `Propuesto`: falta aprobar la opción de proxy/TLS antes de implementar REQ-01.
 
 ## Hecho
+
+### BUG-01 · No se puede escribir el documento del acompañante
+
+Corregido y verificado en Chrome el 2026-11-20. El `Modal` ya no roba el foco al
+re-renderizar el wizard.
+
+- **Commit:** `a95255e`
+- Detalle en [`items/BUG-01.md`](items/BUG-01.md).
 
 Los ítems cerrados se registran en [`HISTORIAL.md`](HISTORIAL.md) y permanecen en
 la tabla de resumen con estado `Hecho`.

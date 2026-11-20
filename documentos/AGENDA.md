@@ -36,13 +36,12 @@ soporte y reuniones.
 
 | Comprometido | Prioridad | Estado |
 | --- | --- | --- |
-| BUG-01 · Documento del acompañante no editable | P1 | En revisión |
+| BUG-01 · Documento del acompañante no editable | P1 | Hecho |
 | TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
 
 - **Fuera de alcance:** implementación de REQ-01.
 - **Riesgos:**
-  - Falta la prueba manual en Chrome con el flujo completo.
-  - El ajuste de foco del `Modal` afecta a todos los diálogos: probar también
+  - El ajuste de foco del `Modal` afecta a todos los diálogos: ya se probaron
     equipos, operaciones y cuenta.
 - **Dependencias:** ninguna.
 
