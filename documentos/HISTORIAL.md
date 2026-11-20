@@ -7,6 +7,18 @@ Cada entrada debe incluir fecha, ítem, estado, commit, cambios, verificación y
 notas. Los ítems cerrados también se reflejan en
 [`BACKLOG.md`](BACKLOG.md).
 
+## 2026-11-20 · TEC-01 — Higiene de datos y lockfile
+
+- **Ítems:** TEC-01.
+- **Estado:** Hecho.
+- **Commit:** `909eb27` (ignore); revert de `package-lock.json` sin commit.
+- **Cambios:**
+  - `apps/api/data/` se agregó a `.gitignore` y se verificó con `git check-ignore`.
+  - Se restauró la versión commiteada de `package-lock.json`: el diff sólo quitaba
+    metadatos `libc: ["glibc"]` de paquetes opcionales.
+- **Verificación:** `git status` sin cambios pendientes en el lockfile.
+- **Notas:** el árbol queda limpio para empezar REQ-01.
+
 ## 2026-11-20 · BUG-01 — Verificación y cierre
 
 - **Ítems:** BUG-01.

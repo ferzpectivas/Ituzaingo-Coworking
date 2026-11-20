@@ -54,7 +54,7 @@ justificación).
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | Hecho | 1 | [ficha](items/BUG-01.md) |
 | REQ-01 | Quitar Docker del despliegue | req | infra | P2 | L | Refinado | 2 | [ficha](items/REQ-01.md) |
-| TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | En revisión | 0 | — |
+| TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | Hecho | 0 | — |
 | TEC-02 | Actualizar README tras quitar Docker | tec | docs | P3 | S | Nuevo | 3 | — |
 | TEC-03 | ADR de despliegue sin Docker | tec | infra | P2 | S | En revisión | 1 | [ADR-001](decisiones/ADR-001-sin-docker.md) |
 
@@ -86,16 +86,11 @@ Sin ítems.
 
 ## En revisión
 
-### TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json`
-
-- `apps/api/data/` ya está en `.gitignore` (verificado con `git check-ignore`).
-- El diff de `package-lock.json` son 84 líneas que quitan `libc: ["glibc"]` de
-  paquetes opcionales. Falta decidir si se revierte o se acepta.
-
 ### TEC-03 · ADR de despliegue sin Docker
 
 ADR redactado en [`decisiones/ADR-001-sin-docker.md`](decisiones/ADR-001-sin-docker.md).
-Estado `Propuesto`: falta aprobar la opción de proxy/TLS antes de implementar REQ-01.
+Estado `Propuesto`: para desarrollo local se usa **nginx**; la opción de producción
+(proxy/TLS) queda pendiente antes de implementar REQ-01.
 
 ## Hecho
 
@@ -106,6 +101,12 @@ re-renderizar el wizard.
 
 - **Commit:** `a95255e`
 - Detalle en [`items/BUG-01.md`](items/BUG-01.md).
+
+### TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json`
+
+- `apps/api/data/` quedó en `.gitignore` (commit `909eb27`).
+- El diff de `package-lock.json` se revirtió: eran 84 líneas de metadatos `libc`
+  de paquetes opcionales, sin cambios reales de dependencias.
 
 Los ítems cerrados se registran en [`HISTORIAL.md`](HISTORIAL.md) y permanecen en
 la tabla de resumen con estado `Hecho`.

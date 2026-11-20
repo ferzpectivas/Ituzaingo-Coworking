@@ -22,12 +22,13 @@ soporte y reuniones.
 | Comprometido | Prioridad | Estado |
 | --- | --- | --- |
 | Documentos base: `BACKLOG.md`, `AGENDA.md`, `HISTORIAL.md`, fichas y `AGENTS.md` | P2 | Hecho |
-| TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json` | P2 | En revisión |
+| TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json` | P2 | Hecho |
 
 - **Fuera de alcance:** BUG-01 y REQ-01.
 - **Riesgos:** ninguno relevante.
-- **Cierre:** documentación creada y commiteada (`909eb27`). TEC-01 quedó parcial:
-  el ignore está hecho y falta decidir qué hacer con el diff de `package-lock.json`.
+- **Cierre:** documentación creada y commiteada (`909eb27`). TEC-01 cerrado: el
+  ignore quedó aplicado y el diff de `package-lock.json` se revirtió por ser ruido
+  de metadatos `libc`.
 
 ## Semana 1 · 23 al 27 nov 2026
 

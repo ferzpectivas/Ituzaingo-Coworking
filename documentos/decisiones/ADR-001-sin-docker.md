@@ -25,9 +25,10 @@ debe priorizar simplicidad operativa, backups confiables y bajo mantenimiento.
 
 ## Decisión
 
-**Pendiente de aprobar en la Semana 1.** La recomendación preliminar es
-**Caddy binario + systemd**, porque reproduce el comportamiento actual con menos
-piezas y mantiene el TLS automático.
+**Pendiente para producción.** El 2026-11-20 se definió usar **nginx** para el
+desarrollo local; la alternativa para el VPS se decide antes de implementar
+REQ-01. La recomendación preliminar sigue siendo **Caddy binario + systemd** por
+el TLS automático y la menor cantidad de piezas.
 
 ## Consecuencias
 
