@@ -41,10 +41,15 @@ const FLOOR_COLORS: Record<string, string> = {
 
 const deg = (value: number) => (value * Math.PI) / 180;
 
+// Altura de corte de la maqueta: los muros se muestran a media altura para
+// poder ver el interior del plano.
+const WALL_CUT = 0.42;
+
 function Chair({
   seat,
   color,
   hovered,
+  compact,
   onHover,
   onLeave,
   onPin,
@@ -52,11 +57,16 @@ function Chair({
   seat: Seat;
   color: string;
   hovered: boolean;
+  compact?: boolean;
   onHover: () => void;
   onLeave: () => void;
   onPin: () => void;
 }) {
   const y = 0.02;
+  const seatSize = compact ? 0.34 : 0.38;
+  const backHeight = compact ? 0.24 : 0.4;
+  const backY = compact ? 0.56 : 0.63;
+  const backZ = compact ? -0.15 : -0.17;
   return (
     <group
       position={[seat.position.x, y, seat.position.z]}
@@ -76,11 +86,11 @@ function Chair({
       }}
     >
       <mesh position={[0, 0.42, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.38, 0.08, 0.38]} />
+        <boxGeometry args={[seatSize, 0.08, seatSize]} />
         <meshStandardMaterial color={color} roughness={0.55} />
       </mesh>
-      <mesh position={[0, 0.63, -0.17]} castShadow>
-        <boxGeometry args={[0.38, 0.4, 0.06]} />
+      <mesh position={[0, backY, backZ]} castShadow>
+        <boxGeometry args={[seatSize, backHeight, 0.06]} />
         <meshStandardMaterial color={color} roughness={0.55} />
       </mesh>
       <mesh position={[0, 0.21, 0]}>
@@ -273,11 +283,11 @@ export function Map3D({
           .map((box, index) => (
             <mesh
               key={`wall-${index}`}
-              position={[box.x, (box.height * 0.42) / 2, box.z]}
+              position={[box.x, (box.height * WALL_CUT) / 2, box.z]}
               castShadow
               receiveShadow
             >
-              <boxGeometry args={[box.width, box.height * 0.42, box.depth]} />
+              <boxGeometry args={[box.width, box.height * WALL_CUT, box.depth]} />
               <meshStandardMaterial color={wallColor} roughness={0.9} />
             </mesh>
           ))}
@@ -286,13 +296,13 @@ export function Map3D({
         {floorplan.wallBoxes
           .filter((box) => box.kind === 'wall')
           .map((box, index) => (
-            <mesh key={`cap-${index}`} position={[box.x, box.height * 0.42 + 0.012, box.z]}>
+            <mesh key={`cap-${index}`} position={[box.x, box.height * WALL_CUT + 0.012, box.z]}>
               <boxGeometry args={[box.width + 0.005, 0.024, box.depth + 0.005]} />
               <meshStandardMaterial color={wallTop} roughness={0.8} />
             </mesh>
           ))}
 
-        {/* Vidrios de aberturas */}
+        {/* Vidrios de aberturas (recortados a la altura de la maqueta) */}
         {floorplan.openings
           .filter((opening) => opening.glass)
           .map((opening, index) => {
@@ -300,13 +310,12 @@ export function Map3D({
             const length = Math.abs(horizontal ? opening.x2 - opening.x1 : opening.z2 - opening.z1);
             const midX = (opening.x1 + opening.x2) / 2;
             const midZ = (opening.z1 + opening.z2) / 2;
+            const top = Math.min(opening.y1, floorplan.wallHeight * WALL_CUT);
+            const bottom = Math.min(opening.y0, top);
             return (
-              <mesh
-                key={`glass-${index}`}
-                position={[midX, (opening.y0 + opening.y1) / 2 - 0.35, midZ]}
-              >
+              <mesh key={`glass-${index}`} position={[midX, (bottom + top) / 2, midZ]}>
                 <boxGeometry
-                  args={horizontal ? [length, opening.y1 - opening.y0, 0.03] : [0.03, opening.y1 - opening.y0, length]}
+                  args={horizontal ? [length, top - bottom, 0.03] : [0.03, top - bottom, length]}
                 />
                 <meshStandardMaterial
                   color="#b7d4dd"
@@ -384,6 +393,7 @@ export function Map3D({
                     seat={relative}
                     color={STATUS_COLORS[status]}
                     hovered={isHovered}
+                    compact={unit.kind === 'pupitre'}
                     onHover={() => showHover(stateForHover(false))}
                     onLeave={() => {
                       if (pinnedKey !== key) setHover(null);
@@ -419,39 +429,28 @@ export function Map3D({
             </Html>
           ))}
 
-        {/* Decoración del acceso */}
+        {/* Elementos fijos: pizarra montada sobre el muro oeste del aula */}
         {floorplan.decor.map((item, index) => {
-          if (item.type === 'planter') {
-            return (
-              <group key={`decor-${index}`} position={[item.position.x, 0, item.position.z]}>
-                <mesh position={[0, 0.18, 0]} castShadow>
-                  <boxGeometry args={[item.size?.width ?? 0.6, 0.36, item.size?.depth ?? 0.6]} />
-                  <meshStandardMaterial color="#cfd6cc" roughness={0.9} />
-                </mesh>
-                <mesh position={[0, 0.48, 0]} castShadow>
-                  <sphereGeometry args={[0.24, 12, 10]} />
-                  <meshStandardMaterial color="#5f8f6a" roughness={0.85} />
-                </mesh>
-              </group>
-            );
-          }
-          if (item.type === 'bench') {
-            return (
-              <group key={`decor-${index}`} position={[item.position.x, 0, item.position.z]}>
-                <mesh position={[0, 0.42, 0]} castShadow>
-                  <boxGeometry args={[item.size?.width ?? 1.6, 0.07, item.size?.depth ?? 0.45]} />
-                  <meshStandardMaterial color="#b08a5c" roughness={0.6} />
-                </mesh>
-                {[-0.6, 0.6].map((offset) => (
-                  <mesh key={offset} position={[offset, 0.2, 0]}>
-                    <boxGeometry args={[0.07, 0.4, 0.36]} />
-                    <meshStandardMaterial color="#6d6a62" roughness={0.8} />
-                  </mesh>
-                ))}
-              </group>
-            );
-          }
-          return null;
+          if (item.type !== 'whiteboard') return null;
+          const aula = floorplan.spaces.find((space) => space.code === 'salon');
+          const depth = item.size?.depth ?? 2.2;
+          const wallTop = floorplan.wallHeight * WALL_CUT;
+          const bottom = 0.45;
+          const height = Math.max(0.4, Math.min(1.2, wallTop - bottom - 0.03));
+          const centerY = bottom + height / 2;
+          const mountedX = (aula?.bounds.x ?? item.position.x) + floorplan.wallThickness / 2 + 0.02;
+          return (
+            <group key={`decor-${index}`} position={[mountedX, 0, item.position.z]}>
+              <mesh position={[0, centerY, 0]} castShadow>
+                <boxGeometry args={[0.04, height + 0.06, depth + 0.06]} />
+                <meshStandardMaterial color="#3f4a46" roughness={0.7} />
+              </mesh>
+              <mesh position={[0.026, centerY, 0]} castShadow>
+                <boxGeometry args={[0.02, height, depth]} />
+                <meshStandardMaterial color="#fafbf8" roughness={0.35} />
+              </mesh>
+            </group>
+          );
         })}
 
         {/* Tooltip 3D */}

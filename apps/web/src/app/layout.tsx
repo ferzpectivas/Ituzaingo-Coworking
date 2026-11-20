@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: '%s · Coworking Ituzaingó',
   },
   description:
-    'Reservá tu puesto en el Espacio de Coworking de Ituzaingó: mapa interactivo, salón de capacitaciones y sala de reuniones.',
+    'Reservá tu puesto en el Espacio de Coworking de Ituzaingó: mapa interactivo, aula de capacitaciones y sala de reuniones.',
   applicationName: 'Coworking Ituzaingó',
   authors: [{ name: 'Municipalidad de Ituzaingó' }],
   keywords: ['coworking', 'Ituzaingó', 'reservas', 'espacio de trabajo', 'municipalidad'],

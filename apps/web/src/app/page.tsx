@@ -52,7 +52,7 @@ const faqs = [
   },
   {
     q: '¿Cuántas personas puedo traer?',
-    a: 'Depende del ambiente: las mesas de Coworking admiten hasta 6 personas, el Salón tiene 10 pupitres individuales y la Sala de Reuniones se reserva completa para 8 personas.',
+    a: 'Depende del ambiente: las mesas de Coworking admiten hasta 6 personas, el Aula tiene 10 pupitres individuales y la Sala de Reuniones se reserva completa para 8 personas.',
   },
   {
     q: '¿Las franjas son de cuatro horas?',
@@ -202,7 +202,7 @@ export default function HomePage() {
           <div className="container-page grid gap-4 py-6 sm:grid-cols-3">
             {[
               { icon: Clock3, title: 'Tres franjas diarias', text: 'Mañana, tarde y noche, de cuatro horas cada una.' },
-              { icon: MapPinned, title: 'Tres ambientes', text: 'Coworking, Salón de capacitaciones y Sala de Reuniones.' },
+              { icon: MapPinned, title: 'Tres ambientes', text: 'Coworking, Aula de capacitaciones y Sala de Reuniones.' },
               { icon: Accessibility, title: 'Accesible y gratuito', text: 'Planta baja, circulación amplia y atención municipal.' },
             ].map((item) => (
               <div key={item.title} className="flex items-start gap-3">
@@ -350,7 +350,7 @@ export default function HomePage() {
                   <MonitorPlay size={21} />
                 </span>
                 <h3 className="mt-4 font-serif text-xl text-ink">Proyectores</h3>
-                <p className="mt-1 text-sm text-muted">3 equipos, ideal para el Salón y la Sala de Reuniones.</p>
+                <p className="mt-1 text-sm text-muted">3 equipos, ideal para el Aula y la Sala de Reuniones.</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink/80">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-blue" /> Caja de transporte

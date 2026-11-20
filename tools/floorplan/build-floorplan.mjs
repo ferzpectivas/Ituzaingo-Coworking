@@ -1,11 +1,24 @@
 #!/usr/bin/env node
 /**
- * Pipeline `mapa del lugar.svg` -> manifiesto arquitectónico JSON.
+ * Pipeline `mapa.drawio.svg` -> manifiesto arquitectónico JSON.
  *
- * El SVG es un export de draw.io. No se usa SVGLoader en runtime: se parsea la
- * geometría vectorial una sola vez, se normaliza a metros y se enriquece con
+ * El archivo es un export de draw.io. No se usa SVGLoader en runtime: se parsea
+ * la geometría vectorial una sola vez, se normaliza a metros y se enriquece con
  * asientos y aberturas. El resultado es determinista y compartido por la vista
  * 3D, la vista 2D y la API.
+ *
+ * Convenciones del plano de referencia (`mapa.drawio.svg`):
+ *   - polilínea negra sin relleno  -> muros exteriores
+ *   - rectángulos sin relleno      -> límites del aula y de la sala de reuniones
+ *   - relleno #ffcc99              -> mesas (coworking y sala de reuniones)
+ *   - relleno #e51400              -> pupitres del aula
+ *   - barras blancas de 9 uu       -> puertas
+ *   - barra #1ba1e2                -> ventanal sobre el frente sur
+ *   - tabla blanca vertical        -> pizarra del aula
+ *
+ * El plano está dibujado a mano y tiene desfases de hasta 2 unidades SVG
+ * (5 cm) entre la polilínea exterior y los rectángulos de los ambientes: se
+ * corrigen con una tolerancia de snapping documentada en `SNAP_TOLERANCE`.
  *
  * Uso: npm run floorplan
  */
@@ -15,21 +28,22 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const SVG_PATH = path.join(ROOT, 'mapa del lugar.svg');
+const SVG_PATH = path.join(ROOT, 'mapa.drawio.svg');
 const TARGETS = [
   path.join(ROOT, 'apps/api/src/floorplan/floorplan.generated.json'),
   path.join(ROOT, 'apps/web/src/lib/floorplan.generated.json'),
 ];
 
 const SCALE = 0.025; // 1 unidad del SVG = 2,5 cm
-const ORIGIN = { x: 19.2, y: 0.6 };
 const WALL_HEIGHT = 2.6;
 const WALL_THICKNESS = 0.12;
 const CHAIR_GAP = 0.3;
+const SNAP_TOLERANCE = 2; // unidades SVG (5 cm) para corregir el dibujo a mano
+const DOOR_HEIGHT = 2.1;
+const VENTANAL_BOTTOM = 0.1;
+const VENTANAL_TOP = 2.4;
 
 const round = (v, p = 4) => Number(Number(v).toFixed(p));
-const nx = (v) => round((v - ORIGIN.x) * SCALE);
-const nz = (v) => round((v - ORIGIN.y) * SCALE);
 
 function attrs(source) {
   const out = {};
@@ -54,11 +68,11 @@ function dedupeSegments(segments) {
   const seen = new Set();
   const out = [];
   for (const s of segments) {
-    const a = `${s.x1.toFixed(3)},${s.z1.toFixed(3)}`;
-    const b = `${s.x2.toFixed(3)},${s.z2.toFixed(3)}`;
+    const a = `${s.x1.toFixed(3)},${s.y1.toFixed(3)}`;
+    const b = `${s.x2.toFixed(3)},${s.y2.toFixed(3)}`;
     const key = a < b ? `${a}|${b}` : `${b}|${a}`;
     if (seen.has(key)) continue;
-    if (Math.abs(s.x1 - s.x2) < 0.001 && Math.abs(s.z1 - s.z2) < 0.001) continue;
+    if (Math.abs(s.x1 - s.x2) < 0.001 && Math.abs(s.y1 - s.y2) < 0.001) continue;
     seen.add(key);
     out.push(s);
   }
@@ -95,13 +109,13 @@ function wallBox(axis, line, from, to, y, height, kind = 'wall') {
 // ---------------------------------------------------------------------------
 const svg = fs.readFileSync(SVG_PATH, 'utf8');
 
-const pathMatch = [...svg.matchAll(/<path\b([^>]*?)d="([^"]+)"([^>]*)>/g)].find((m) =>
-  /fill="none"/.test(m[1] + m[3]),
+// Muros exteriores: la única polilínea sin relleno del dibujo.
+const pathMatch = [...svg.matchAll(/<path\b([^>]*?)d="([^"]+)"([^>]*)>/g)].find(
+  (m) => /fill="none"/.test(m[1] + m[3]) && (m[2].match(/[ML]/g) ?? []).length >= 4,
 );
 if (!pathMatch) throw new Error('No se encontró la polilínea de muros en el SVG.');
-const pathD = pathMatch[2];
 const pathPoints = [];
-for (const m of pathD.matchAll(/[ML]\s*(-?[\d.]+)\s*[,\s]\s*(-?[\d.]+)/g)) {
+for (const m of pathMatch[2].matchAll(/[ML]\s*(-?[\d.]+)\s*[,\s]\s*(-?[\d.]+)/g)) {
   pathPoints.push({ x: parseNumber(m[1]), y: parseNumber(m[2]) });
 }
 
@@ -137,7 +151,7 @@ for (const m of svg.matchAll(/<rect\b([^>]*?)\/?>/g)) {
   let cy = parseNumber(a.y) + h / 2;
   let angle = 0;
   if (a.transform) {
-    const t = /rotate\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/.exec(a.transform);
+    const t = /rotate\(\s*(-?[\d.]+)\s*[,\s]\s*(-?[\d.]+)\s*[,\s]\s*(-?[\d.]+)\s*\)/.exec(a.transform);
     if (t) {
       angle = parseNumber(t[1]);
       cx = parseNumber(t[2]);
@@ -162,6 +176,11 @@ const roomRects = rects.filter(
 );
 const tableRects = rects.filter((r) => r.fill === '#ffcc99');
 const deskRects = rects.filter((r) => r.fill === '#e51400');
+// Las puertas son barras blancas finas (9 uu de espesor); la pizarra es una
+// tabla blanca alta montada sobre el muro del aula.
+const doorRects = rects.filter((r) => r.fill === '#ffffff' && r.h <= 12 && r.w >= 30);
+const boardRects = rects.filter((r) => r.fill === '#ffffff' && r.h > 12);
+const windowRects = rects.filter((r) => r.fill === '#1ba1e2');
 
 if (roomRects.length !== 2) {
   throw new Error(`Se esperaban 2 rectángulos de ambiente, se encontraron ${roomRects.length}.`);
@@ -172,17 +191,224 @@ if (tableRects.length !== 4) {
 if (deskRects.length !== 10) {
   throw new Error(`Se esperaban 10 pupitres rojos, se encontraron ${deskRects.length}.`);
 }
+if (doorRects.length !== 3) {
+  throw new Error(`Se esperaban 3 puertas, se encontraron ${doorRects.length}.`);
+}
+if (boardRects.length !== 1) {
+  throw new Error(`Se esperaba 1 pizarra, se encontraron ${boardRects.length}.`);
+}
+if (windowRects.length !== 1) {
+  throw new Error(`Se esperaba 1 ventanal, se encontraron ${windowRects.length}.`);
+}
 
-const salonRect = roomRects.find((r) => r.w === 170 && r.h === 160) ?? roomRects[0];
-const salaRect = roomRects.find((r) => r !== salonRect) ?? roomRects[1];
+const aulaRect = roomRects.find((r) => r.w === 170 && r.h === 160) ?? roomRects[0];
+const salaRect = roomRects.find((r) => r !== aulaRect) ?? roomRects[1];
+if (aulaRect.w !== 170 || aulaRect.h !== 160) {
+  throw new Error('No se pudo identificar el aula (rectángulo de 170 x 160).');
+}
 
-const pathXs = pathPoints.map((p) => p.x);
-const pathYs = pathPoints.map((p) => p.y);
+// ---------------------------------------------------------------------------
+// 2. Normalización: el dibujo tiene desfases de hasta 2 uu (5 cm) entre la
+//    polilínea exterior y los rectángulos de los ambientes. Se ajustan las
+//    coordenadas del perímetro a los bordes de los ambientes.
+// ---------------------------------------------------------------------------
+const xAnchors = [aulaRect.x, aulaRect.x + aulaRect.w, salaRect.x, salaRect.x + salaRect.w];
+const yAnchors = [aulaRect.y, aulaRect.y + aulaRect.h, salaRect.y, salaRect.y + salaRect.h];
+
+function snap(value, anchors) {
+  let best = value;
+  let bestDistance = SNAP_TOLERANCE + 1;
+  for (const anchor of anchors) {
+    const distance = Math.abs(value - anchor);
+    if (distance <= SNAP_TOLERANCE && distance < bestDistance) {
+      best = anchor;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+const snapX = (value) => snap(value, xAnchors);
+const snapY = (value) => snap(value, yAnchors);
+
+const polyline = pathPoints.map((p) => ({ x: snapX(p.x), y: snapY(p.y) }));
+
+// Muros en unidades SVG: polilínea exterior + bordes de los rectángulos.
+const rawWalls = [];
+for (let i = 1; i < polyline.length; i += 1) {
+  const a = polyline[i - 1];
+  const b = polyline[i];
+  rawWalls.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y });
+}
+for (const r of roomRects) {
+  rawWalls.push(
+    { x1: r.x, y1: r.y, x2: r.x + r.w, y2: r.y },
+    { x1: r.x, y1: r.y + r.h, x2: r.x + r.w, y2: r.y + r.h },
+    { x1: r.x, y1: r.y, x2: r.x, y2: r.y + r.h },
+    { x1: r.x + r.w, y1: r.y, x2: r.x + r.w, y2: r.y + r.h },
+  );
+}
+const wallsSvg = dedupeSegments(rawWalls);
+
+const wallXs = wallsSvg.flatMap((w) => [w.x1, w.x2]);
+const wallYs = wallsSvg.flatMap((w) => [w.y1, w.y2]);
+const ORIGIN = { x: Math.min(...wallXs), y: Math.min(...wallYs) };
+
+const nx = (v) => round((v - ORIGIN.x) * SCALE);
+const nz = (v) => round((v - ORIGIN.y) * SCALE);
+
+const bounds = {
+  x: 0,
+  z: 0,
+  width: round((Math.max(...wallXs) - ORIGIN.x) * SCALE),
+  depth: round((Math.max(...wallYs) - ORIGIN.y) * SCALE),
+};
+
+// ---------------------------------------------------------------------------
+// 3. Aberturas: puertas y ventanal salen del propio plano y se ajustan al muro
+//    más cercano con la misma orientación.
+// ---------------------------------------------------------------------------
+function orientedBar(r) {
+  const size = rotatedSize(r.w, r.h, r.angle);
+  const horizontal = size.width >= size.depth;
+  const length = horizontal ? size.width : size.depth;
+  const thickness = horizontal ? size.depth : size.width;
+  return {
+    horizontal,
+    cx: r.cx,
+    cy: r.cy,
+    from: (horizontal ? r.cx : r.cy) - length / 2,
+    to: (horizontal ? r.cx : r.cy) + length / 2,
+    thickness,
+  };
+}
+
+function wallsForBar(bar) {
+  const line = bar.horizontal ? bar.cy : bar.cx;
+  const matches = [];
+  for (const wall of wallsSvg) {
+    const wallHorizontal = Math.abs(wall.y1 - wall.y2) < 0.001;
+    if (wallHorizontal !== bar.horizontal) continue;
+    const wallLine = wallHorizontal ? wall.y1 : wall.x1;
+    if (Math.abs(wallLine - line) > SNAP_TOLERANCE) continue;
+    const wallFrom = wallHorizontal ? Math.min(wall.x1, wall.x2) : Math.min(wall.y1, wall.y2);
+    const wallTo = wallHorizontal ? Math.max(wall.x1, wall.x2) : Math.max(wall.y1, wall.y2);
+    const from = Math.max(bar.from, wallFrom);
+    const to = Math.min(bar.to, wallTo);
+    if (to - from < 0.5) continue;
+    matches.push({ wallFrom, wallTo, line: wallLine, from, to });
+  }
+  return matches;
+}
+
+const snapEnd = (value, anchor) =>
+  Math.abs(value - anchor) <= SNAP_TOLERANCE ? anchor : value;
+
+const openingsSvg = [];
+
+function addOpening(rect, type) {
+  const bar = orientedBar(rect);
+  const matches = wallsForBar(bar);
+  if (matches.length === 0) {
+    throw new Error(`La abertura ${type} no coincide con ningún muro del plano.`);
+  }
+  for (const match of matches) {
+    const from = snapEnd(match.from, match.wallFrom);
+    const to = snapEnd(match.to, match.wallTo);
+    if (to - from < 1) continue;
+    openingsSvg.push({
+      type,
+      horizontal: bar.horizontal,
+      line: match.line,
+      from,
+      to,
+      y0: type === 'door' ? 0 : VENTANAL_BOTTOM,
+      y1: type === 'door' ? DOOR_HEIGHT : VENTANAL_TOP,
+      glass: type === 'window',
+    });
+  }
+}
+
+for (const door of doorRects) addOpening(door, 'door');
+for (const window of windowRects) addOpening(window, 'window');
+
+const openings = openingsSvg.map((o) => ({
+  type: o.type,
+  axis: o.horizontal ? 'h' : 'v',
+  line: o.horizontal ? nz(o.line) : nx(o.line),
+  from: o.horizontal ? nx(o.from) : nz(o.from),
+  to: o.horizontal ? nx(o.to) : nz(o.to),
+  y0: o.y0,
+  y1: o.y1,
+  glass: o.glass,
+  x1: o.horizontal ? nx(o.from) : nx(o.line),
+  z1: o.horizontal ? nz(o.line) : nz(o.from),
+  x2: o.horizontal ? nx(o.to) : nx(o.line),
+  z2: o.horizontal ? nz(o.line) : nz(o.to),
+}));
+
+// ---------------------------------------------------------------------------
+// 4. Muros en metros: cada tramo se corta según las aberturas que lo atraviesan.
+// ---------------------------------------------------------------------------
+const solidWalls = [];
+const wallBoxes = [];
+for (const w of wallsSvg) {
+  const horizontal = Math.abs(w.y1 - w.y2) < 0.001;
+  const axis = horizontal ? 'h' : 'v';
+  const line = horizontal ? nz(w.y1) : nx(w.x1);
+  const start = horizontal ? nx(Math.min(w.x1, w.x2)) : nz(Math.min(w.y1, w.y2));
+  const end = horizontal ? nx(Math.max(w.x1, w.x2)) : nz(Math.max(w.y1, w.y2));
+
+  const pushSolid = (from, to) => {
+    if (to - from <= 0.001) return;
+    if (horizontal) {
+      solidWalls.push({ x1: round(from), z1: round(line), x2: round(to), z2: round(line) });
+    } else {
+      solidWalls.push({ x1: round(line), z1: round(from), x2: round(line), z2: round(to) });
+    }
+  };
+
+  const local = openings
+    .filter((o) => o.axis === axis && Math.abs((horizontal ? o.z1 : o.x1) - line) < 0.001)
+    .map((o) => ({ ...o, from: Math.max(o.from, start), to: Math.min(o.to, end) }))
+    .filter((o) => o.to - o.from > 0.001)
+    .sort((a, b) => a.from - b.from);
+
+  let cursor = start;
+  for (const o of local) {
+    if (o.from > cursor + 0.001) {
+      const box = wallBox(axis, line, cursor, o.from, 0, WALL_HEIGHT);
+      if (box) {
+        wallBoxes.push(box);
+        pushSolid(cursor, o.from);
+      }
+    }
+    if (o.y0 > 0.001) {
+      const sill = wallBox(axis, line, o.from, o.to, 0, o.y0, 'sill');
+      if (sill) wallBoxes.push(sill);
+    }
+    if (o.y1 < WALL_HEIGHT - 0.001) {
+      const lintel = wallBox(axis, line, o.from, o.to, o.y1, WALL_HEIGHT - o.y1, 'lintel');
+      if (lintel) wallBoxes.push(lintel);
+    }
+    cursor = Math.max(cursor, o.to);
+  }
+  if (cursor < end - 0.001) {
+    const box = wallBox(axis, line, cursor, end, 0, WALL_HEIGHT);
+    if (box) {
+      wallBoxes.push(box);
+      pushSolid(cursor, end);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 5. Ambientes
+// ---------------------------------------------------------------------------
 const coworkingBoundsSvg = {
-  x: Math.min(...pathXs),
-  y: Math.min(...pathYs),
-  w: Math.max(...pathXs) - Math.min(...pathXs),
-  h: Math.max(...pathYs) - Math.min(...pathYs),
+  x: Math.min(...polyline.map((p) => p.x)),
+  y: Math.min(...polyline.map((p) => p.y)),
+  w: Math.max(...polyline.map((p) => p.x)) - Math.min(...polyline.map((p) => p.x)),
+  h: Math.max(...polyline.map((p) => p.y)) - Math.min(...polyline.map((p) => p.y)),
 };
 
 const spaceDefs = [
@@ -197,11 +423,11 @@ const spaceDefs = [
   },
   {
     code: 'salon',
-    name: 'Salón',
+    name: 'Aula',
     description: 'Pupitres individuales para capacitaciones y jornadas de trabajo.',
     color: '#C9A66B',
     accent: '#F6EFE3',
-    boundsSvg: { x: salonRect.x, y: salonRect.y, w: salonRect.w, h: salonRect.h },
+    boundsSvg: { x: aulaRect.x, y: aulaRect.y, w: aulaRect.w, h: aulaRect.h },
     bookable: true,
   },
   {
@@ -220,10 +446,10 @@ const spaceDefs = [
     color: '#8A9A96',
     accent: '#EEF1EE',
     boundsSvg: {
-      x: coworkingBoundsSvg.x,
-      y: salonRect.y,
-      w: salonRect.x - coworkingBoundsSvg.x,
-      h: salonRect.h,
+      x: ORIGIN.x,
+      y: aulaRect.y,
+      w: aulaRect.x - ORIGIN.x,
+      h: aulaRect.h,
     },
     bookable: false,
   },
@@ -253,102 +479,11 @@ const spaces = spaceDefs.map((s) => {
 });
 
 // ---------------------------------------------------------------------------
-// 2. Muros: polilínea + bordes de los rectángulos, deduplicados
+// 6. Mobiliario y asientos
 // ---------------------------------------------------------------------------
-const rawWalls = [];
-for (let i = 1; i < pathPoints.length; i += 1) {
-  const a = pathPoints[i - 1];
-  const b = pathPoints[i];
-  rawWalls.push({ x1: nx(a.x), z1: nz(a.y), x2: nx(b.x), z2: nz(b.y) });
-}
-for (const r of roomRects) {
-  const x1 = nx(r.x);
-  const z1 = nz(r.y);
-  const x2 = nx(r.x + r.w);
-  const z2 = nz(r.y + r.h);
-  rawWalls.push(
-    { x1, z1, x2, z2: z1 },
-    { x1, z1: z2, x2, z2 },
-    { x1, z1, x2: x1, z2 },
-    { x1: x2, z1, x2, z2 },
-  );
-}
-
-const walls = dedupeSegments(rawWalls);
-
-// ---------------------------------------------------------------------------
-// 3. Aberturas (interpretación documentada; el plano no las dibuja)
-// ---------------------------------------------------------------------------
-const openingDefs = [
-  { type: 'door', axis: 'h', line: 4, from: 1.5, to: 2.7, y0: 0, y1: 2.1 },
-  { type: 'door', axis: 'h', line: 4, from: 5.2, to: 6.4, y0: 0, y1: 2.1 },
-  { type: 'door', axis: 'v', line: 8, from: 6.0, to: 7.2, y0: 0, y1: 2.1 },
-  { type: 'window', axis: 'h', line: 9, from: 0.8, to: 2.8, y0: 0.9, y1: 2.2 },
-  { type: 'window', axis: 'h', line: 9, from: 4.2, to: 6.2, y0: 0.9, y1: 2.2 },
-  { type: 'window', axis: 'v', line: 11.25, from: 5.4, to: 6.6, y0: 0.9, y1: 2.2 },
-  { type: 'window', axis: 'h', line: 0, from: 4.5, to: 6.5, y0: 0.9, y1: 2.2 },
-  { type: 'window', axis: 'v', line: 3.75, from: 1.0, to: 2.5, y0: 0.9, y1: 2.2 },
-];
-
-const openings = openingDefs.map((o) => ({
-  ...o,
-  glass: o.type === 'window',
-  x1: o.axis === 'h' ? o.from : o.line,
-  z1: o.axis === 'h' ? o.line : o.from,
-  x2: o.axis === 'h' ? o.to : o.line,
-  z2: o.axis === 'h' ? o.line : o.to,
-}));
-
-const solidWalls = [];
-const wallBoxes = [];
-for (const w of walls) {
-  const horizontal = Math.abs(w.z1 - w.z2) < 0.001;
-  const axis = horizontal ? 'h' : 'v';
-  const line = horizontal ? w.z1 : w.x1;
-  const start = horizontal ? Math.min(w.x1, w.x2) : Math.min(w.z1, w.z2);
-  const end = horizontal ? Math.max(w.x1, w.x2) : Math.max(w.z1, w.z2);
-  const local = openings
-    .filter((o) => o.axis === axis && Math.abs((horizontal ? o.z1 : o.x1) - line) < 0.001)
-    .filter((o) => o.from >= start - 0.001 && o.to <= end + 0.001)
-    .sort((a, b) => a.from - b.from);
-
-  let cursor = start;
-  for (const o of local) {
-    if (o.from > cursor + 0.001) {
-      const box = wallBox(axis, line, cursor, o.from, 0, WALL_HEIGHT);
-      if (box) {
-        wallBoxes.push(box);
-        solidWalls.push({ x1: round(cursor), z1: round(line), x2: round(o.from), z2: round(line) });
-      }
-    }
-    if (o.y0 > 0.001) {
-      const sill = wallBox(axis, line, o.from, o.to, 0, o.y0, 'sill');
-      if (sill) wallBoxes.push(sill);
-    }
-    if (o.y1 < WALL_HEIGHT - 0.001) {
-      const lintel = wallBox(axis, line, o.from, o.to, o.y1, WALL_HEIGHT - o.y1, 'lintel');
-      if (lintel) wallBoxes.push(lintel);
-    }
-    cursor = Math.max(cursor, o.to);
-  }
-  if (cursor < end - 0.001) {
-    const box = wallBox(axis, line, cursor, end, 0, WALL_HEIGHT);
-    if (box) {
-      wallBoxes.push(box);
-      solidWalls.push({ x1: round(cursor), z1: round(line), x2: round(end), z2: round(line) });
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// 4. Mobiliario y asientos
-// ---------------------------------------------------------------------------
-const CENTER_X = (salonRect.x + salaRect.x) / 2; // 294.2
-const MID_SALON_X = 294.2;
-
 function spaceCodeFor(cx, cy) {
   if (cx >= salaRect.x - 1) return 'sala-reuniones';
-  if (cy < salonRect.y + salonRect.h) return 'salon';
+  if (cy < aulaRect.y + aulaRect.h) return 'salon';
   return 'coworking';
 }
 
@@ -370,7 +505,7 @@ function buildSeats(furniture) {
   };
 
   if (furniture.kind === 'pupitre') {
-    push(x - 0.55, z, 90);
+    push(x - 0.5, z, 90);
     return seats;
   }
 
@@ -394,21 +529,8 @@ let srIndex = 0;
 for (const r of tables) {
   const spaceCode = spaceCodeFor(r.cx, r.cy);
   const size = rotatedSize(r.w, r.h, r.angle);
-  let x = nx(r.cx);
-  let z = nz(r.cy);
-  let width = round(size.width * SCALE);
-  let depth = round(size.depth * SCALE);
   const isMeeting = spaceCode === 'sala-reuniones';
-  if (isMeeting) {
-    width = 1.2;
-    srIndex += 1;
-  } else {
-    width = 1.1;
-    cwIndex += 1;
-  }
-  if (!isMeeting && cwIndex === 3) x = round(x + 0.25);
-
-  const code = isMeeting ? `SR-M${srIndex}` : `CW-M${cwIndex}`;
+  const code = isMeeting ? `SR-M${++srIndex}` : `CW-M${++cwIndex}`;
   const label = isMeeting ? `MR${srIndex}` : `M${cwIndex}`;
   const unit = {
     code,
@@ -416,8 +538,8 @@ for (const r of tables) {
     spaceCode,
     kind: isMeeting ? 'mesa_ejecutiva' : 'mesa',
     capacity: 0,
-    position: { x, z },
-    size: { width, depth },
+    position: { x: nx(r.cx), z: nz(r.cy) },
+    size: { width: round(size.width * SCALE), depth: round(size.depth * SCALE) },
     rotation: 0,
     longAxis: 'z',
     svgRef: `table-${Math.round(r.cx)}-${Math.round(r.cy)}`,
@@ -433,10 +555,6 @@ const desks = [...deskRects].sort((a, b) => {
   return a.cx - b.cx;
 });
 desks.forEach((r, i) => {
-  const isLeft = r.cx < MID_SALON_X;
-  let x = nx(r.cx);
-  const z = nz(r.cy);
-  if (isLeft) x = round(x - 0.3);
   const code = `SA-D${String(i + 1).padStart(2, '0')}`;
   const unit = {
     code,
@@ -444,7 +562,7 @@ desks.forEach((r, i) => {
     spaceCode: 'salon',
     kind: 'pupitre',
     capacity: 1,
-    position: { x, z },
+    position: { x: nx(r.cx), z: nz(r.cy) },
     size: { width: round(r.w * SCALE), depth: round(r.h * SCALE) },
     rotation: 0,
     longAxis: 'x',
@@ -475,29 +593,47 @@ if (totalSeats !== 36) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. Decoración del patio de acceso
+// 7. Elementos fijos: pizarra del aula
 // ---------------------------------------------------------------------------
+const board = boardRects[0];
+const boardSize = rotatedSize(board.w, board.h, board.angle);
 const decor = [
-  { type: 'planter', position: { x: 0.55, z: 0.65 }, size: { width: 0.6, depth: 0.6 } },
-  { type: 'planter', position: { x: 3.05, z: 0.65 }, size: { width: 0.6, depth: 0.6 } },
-  { type: 'bench', position: { x: 1.85, z: 1.9 }, size: { width: 1.6, depth: 0.45 }, rotation: 0 },
-  { type: 'sign', position: { x: 1.85, z: 3.45 }, rotation: 0 },
+  {
+    type: 'whiteboard',
+    position: { x: nx(board.cx), z: nz(board.cy) },
+    size: { width: round(boardSize.width * SCALE), depth: round(boardSize.depth * SCALE) },
+    rotation: 0,
+  },
 ];
+
+const labels = textLabels
+  .filter((label) => /^\d+:\s/.test(label.text))
+  .map((label) => ({ text: label.text, x: nx(label.x), y: nz(label.y) }));
 
 const revision = crypto
   .createHash('sha256')
   .update(svg)
-  .update(JSON.stringify({ SCALE, ORIGIN, openingDefs, WALL_HEIGHT }))
+  .update(
+    JSON.stringify({
+      SCALE,
+      ORIGIN,
+      SNAP_TOLERANCE,
+      WALL_HEIGHT,
+      DOOR_HEIGHT,
+      VENTANAL_BOTTOM,
+      VENTANAL_TOP,
+    }),
+  )
   .digest('hex')
   .slice(0, 12);
 
 const manifest = {
   revision,
   generatedAt: new Date().toISOString(),
-  source: 'mapa del lugar.svg',
+  source: 'mapa.drawio.svg',
   scale: SCALE,
   origin: ORIGIN,
-  bounds: { x: 0, z: 0, width: 11.25, depth: 9 },
+  bounds,
   wallHeight: WALL_HEIGHT,
   wallThickness: WALL_THICKNESS,
   spaces,
@@ -506,11 +642,7 @@ const manifest = {
   wallBoxes,
   openings,
   decor,
-  labels: [
-    { text: '1: coworking', x: 59, y: 71 },
-    { text: '2: aula', x: 43, y: 90 },
-    { text: '3: sala de reuniones', x: 79, y: 108 },
-  ],
+  labels,
   totals: {
     spaces: spaces.filter((s) => s.bookable).length,
     furniture: furniture.length,

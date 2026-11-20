@@ -56,7 +56,7 @@ documento); **(3)** equipamiento opcional con su accesorio obligatorio.
   automáticamente 8 personas.
 - Franjas: `manana` 09–13, `tarde` 14–18, `noche` 18–22 (America/Argentina/Buenos_Aires).
 
-Capacidad total: **36 puestos** — Coworking 18 (3 mesas × 6), Salón 10 pupitres,
+Capacidad total: **36 puestos** — Coworking 18 (3 mesas × 6), Aula 10 pupitres,
 Sala de Reuniones 8.
 
 ---
@@ -73,7 +73,7 @@ Sala de Reuniones 8.
 
 ```bash
 npm install
-npm run floorplan      # regenera el manifiesto desde "mapa del lugar.svg"
+npm run floorplan      # regenera el manifiesto desde "mapa.drawio.svg"
 npm run dev            # API en :4000 y web en :3000
 ```
 
@@ -288,18 +288,22 @@ curl -s -X POST http://localhost:4000/api/v1/reservations \
 
 ## Mapa arquitectónico
 
-El mapa deriva de `mapa del lugar.svg`, procesado por
+El mapa deriva de `mapa.drawio.svg`, procesado por
 `tools/floorplan/build-floorplan.mjs`:
 
-- Escala: 1 unidad SVG = 0,025 m; origen en `(19.2, 0.6)`.
-- Se detectan 3 ambientes, 14 muebles, 36 asientos, 31 volúmenes de muro y 8 aberturas.
+- Escala: 1 unidad SVG = 0,025 m; el origen y los límites se calculan desde la
+  geometría del plano (11,2 m × 9,0 m).
+- Se detectan 3 ambientes, 14 muebles, 36 asientos, 21 volúmenes de muro y
+  5 aberturas (3 puertas y el ventanal del frente sur).
 - Pupitres rojos → puestos individuales; mesas marrones → mesas grupales.
-- Ajustes ergonómicos: `CW-M3` +0,25 m, columna izquierda del Salón −0,30 m y mesa
-  de la sala de 1,2 m de ancho.
+- El perímetro se ajusta a los rectángulos de los ambientes con una tolerancia
+  de 2 unidades SVG (5 cm), porque el plano está dibujado a mano.
+- Los elementos fijos del plano (pizarra del aula, puertas y ventanal) salen
+  del propio dibujo; no se agrega decoración que no figure en él.
 - El script escribe `apps/api/src/floorplan/floorplan.generated.json` y
   `apps/web/src/lib/floorplan.generated.json`.
 
-Si se modifica el SVG, ejecutar `npm run floorplan` y recompilar ambos paquetes.
+Si se modifica el dibujo, ejecutar `npm run floorplan` y recompilar ambos paquetes.
 
 ---
 

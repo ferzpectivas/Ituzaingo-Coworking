@@ -4,7 +4,7 @@ import path from 'node:path';
 function findProjectRoot(start: string): string {
   let current = path.resolve(start);
   for (let i = 0; i < 8; i += 1) {
-    if (fs.existsSync(path.join(current, 'mapa del lugar.svg'))) return current;
+    if (fs.existsSync(path.join(current, 'mapa.drawio.svg'))) return current;
     const parent = path.dirname(current);
     if (parent === current) break;
     current = parent;

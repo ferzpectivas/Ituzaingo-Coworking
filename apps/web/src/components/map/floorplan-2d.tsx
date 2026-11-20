@@ -174,6 +174,25 @@ export function Floorplan2D({
         ),
       )}
 
+      {/* Elementos fijos (pizarra del aula) */}
+      {floorplan.decor.map((item, index) =>
+        item.type === 'whiteboard' ? (
+          <g key={`decor-${index}`}>
+            <title>Pizarra</title>
+            <rect
+              x={item.position.x - (item.size?.width ?? 0.06) / 2}
+              y={item.position.z - (item.size?.depth ?? 2.2) / 2}
+              width={item.size?.width ?? 0.06}
+              height={item.size?.depth ?? 2.2}
+              rx={0.015}
+              fill="#ffffff"
+              stroke="#3c4743"
+              strokeWidth={0.02}
+            />
+          </g>
+        ) : null,
+      )}
+
       {/* Mobiliario */}
       {floorplan.furniture.map((unit) => (
         <g key={unit.code}>
