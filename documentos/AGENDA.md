@@ -39,6 +39,7 @@ soporte y reuniones.
 | --- | --- | --- |
 | BUG-01 · Documento del acompañante no editable | P1 | Hecho |
 | TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
+| TEC-04 · Configurar nginx local para desarrollo | P2 | En revisión |
 
 - **Fuera de alcance:** implementación de REQ-01.
 - **Riesgos:**

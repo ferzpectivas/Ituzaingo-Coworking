@@ -7,6 +7,22 @@ Cada entrada debe incluir fecha, ítem, estado, commit, cambios, verificación y
 notas. Los ítems cerrados también se reflejan en
 [`BACKLOG.md`](BACKLOG.md).
 
+## 2026-11-20 · TEC-04 — Proxy nginx local
+
+- **Ítems:** TEC-04.
+- **Estado:** En revisión.
+- **Commit:** `2dcd96a`
+- **Cambios:**
+  - `deploy/nginx/local.conf`: proxy `/api/` → `127.0.0.1:4000` y `/` →
+    `127.0.0.1:3000`, con SSE sin buffering, WebSocket de HMR y cabeceras de
+    seguridad equivalentes al Caddyfile.
+  - `deploy/nginx/install-local.sh`: copia el sitio, desactiva el `default`,
+    valida con `nginx -t` y recarga el servicio.
+  - `deploy/nginx/README.md` y variables de `.env` para el modo nginx.
+- **Verificación:** `nginx -t` con puerto alternativo OK; `bash -n` OK.
+- **Notas:** falta ejecutar el script y probar `http://localhost` con login,
+  reserva y mapa en vivo.
+
 ## 2026-11-20 · TEC-01 — Higiene de datos y lockfile
 
 - **Ítems:** TEC-01.
