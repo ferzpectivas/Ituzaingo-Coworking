@@ -103,3 +103,4 @@ WIP máximo: 2 ítems en curso.
 | `documentos/items/` | Fichas detalladas por ítem. |
 | `documentos/decisiones/` | ADR de decisiones técnicas. |
 | `documentos/plantillas/item.md` | Plantilla para nuevas fichas. |
+| `deploy/nginx/` | Proxy local de desarrollo (opcional) y su guía de instalación. |

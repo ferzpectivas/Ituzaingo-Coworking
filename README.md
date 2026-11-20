@@ -107,6 +107,26 @@ SEED_ON_START=true
 > `NEXT_PUBLIC_API_URL` se incorpora al bundle en tiempo de compilación: si cambia,
 > hay que volver a ejecutar `npm run build -w @ituzaingo/web`.
 
+### Desarrollo detrás de nginx (opcional)
+
+Para probar el mismo esquema de producción (un solo origen, `/api/*` a la API):
+
+```bash
+sudo apt update && sudo apt install -y nginx   # una sola vez
+./deploy/nginx/install-local.sh
+```
+
+Ajustar `.env` y reiniciar `npm run dev`:
+
+```env
+WEB_ORIGIN=http://localhost
+NEXT_PUBLIC_API_URL=/api/v1
+COOKIE_SECURE=false
+```
+
+Luego abrir `http://localhost`. La configuración, verificación y rollback están
+en [`deploy/nginx/README.md`](deploy/nginx/README.md).
+
 Para regenerar los datos demo: detener la API, borrar la carpeta `data/` y volver a
 iniciar con `SEED_ON_START=true`.
 
