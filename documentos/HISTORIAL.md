@@ -7,6 +7,40 @@ Cada entrada debe incluir fecha, ítem, estado, commit, cambios, verificación y
 notas. Los ítems cerrados también se reflejan en
 [`BACKLOG.md`](BACKLOG.md).
 
+## 2026-11-21 · BUG-02 — Login 500 con nginx
+
+- **Ítems:** BUG-02.
+- **Estado:** Hecho.
+- **Commit:** `7bc0222` (guarda de puertos); sin cambios en el código de producto.
+- **Cambios:**
+  - Se detuvo una instancia vieja de la API (`node dist/main`) que ocupaba el
+    puerto `4000` y se reinició `npm run dev`.
+  - `tools/dev/check-ports.mjs` + script `predev`: `npm run dev` falla con un
+    mensaje claro si `3000` o `4000` ya están ocupados.
+- **Verificación:** por `http://localhost` (nginx): health `200`, login `201` con
+  2 cookies, `/auth/me` `200`, alta y cancelación de reserva `201`, SSE con
+  evento `snapshot`. `npm run typecheck` y `npm run build` sin errores.
+- **Notas:** el 500 no venía de nginx, los datos ni las credenciales; una
+  instancia aislada con el mismo `dist` y una copia de los datos respondió `201`.
+  No se pudo capturar el stack del proceso viejo porque se detuvo durante el
+  diagnóstico.
+
+## 2026-11-21 · TEC-04 — Verificación y cierre de nginx local
+
+- **Ítems:** TEC-04.
+- **Estado:** Hecho.
+- **Commit:** `2dcd96a` (configuración); verificación sin cambios de código.
+- **Cambios:** ninguno adicional.
+- **Verificación:** con nginx activo en `:80` y la app en modo nginx
+  (`WEB_ORIGIN=http://localhost`, `NEXT_PUBLIC_API_URL=/api/v1`):
+  - `GET /` y `GET /ingresar` → `200`.
+  - `POST /api/v1/auth/login` → `201` con cookies `cw_access` y `cw_refresh`.
+  - `GET /api/v1/auth/me` con cookie → `200`.
+  - Alta y cancelación de reserva con acompañante → `201`.
+  - `GET /api/v1/stream/occupancy` → evento `snapshot` sin buffering.
+- **Notas:** TEC-04 cerrado. La decisión de proxy/TLS para producción sigue
+  pendiente en TEC-03.
+
 ## 2026-11-20 · TEC-04 — Proxy nginx local
 
 - **Ítems:** TEC-04.

@@ -53,11 +53,12 @@ justificación).
 | ID | Título | Tipo | Área | Prioridad | Est. | Estado | Semana | Ficha |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | Hecho | 1 | [ficha](items/BUG-01.md) |
+| BUG-02 | Login devuelve 500 con el proxy nginx | bug | infra | P1 | S | Hecho | 1 | [ficha](items/BUG-02.md) |
 | REQ-01 | Quitar Docker del despliegue | req | infra | P2 | L | Refinado | 2 | [ficha](items/REQ-01.md) |
 | TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | Hecho | 0 | — |
 | TEC-02 | Actualizar README tras quitar Docker | tec | docs | P3 | S | Nuevo | 3 | — |
 | TEC-03 | ADR de despliegue sin Docker | tec | infra | P2 | S | En revisión | 1 | [ADR-001](decisiones/ADR-001-sin-docker.md) |
-| TEC-04 | Configurar nginx local para desarrollo | tec | infra | P2 | S | En revisión | 1 | [guía](../deploy/nginx/README.md) |
+| TEC-04 | Configurar nginx local para desarrollo | tec | infra | P2 | S | Hecho | 1 | [guía](../deploy/nginx/README.md) |
 
 ## Listo
 
@@ -93,16 +94,6 @@ ADR redactado en [`decisiones/ADR-001-sin-docker.md`](decisiones/ADR-001-sin-doc
 Estado `Propuesto`: para desarrollo local se usa **nginx**; la opción de producción
 (proxy/TLS) queda pendiente antes de implementar REQ-01.
 
-### TEC-04 · Configurar nginx local para desarrollo
-
-Proxy en `http://localhost` con `/api/` → `127.0.0.1:4000` y `/` → `127.0.0.1:3000`.
-Incluye SSE sin buffering, WebSocket de HMR y las cabeceras del Caddyfile.
-
-- **Commit:** `2dcd96a`
-- **Pendiente:** ejecutar `./deploy/nginx/install-local.sh`, reiniciar `npm run dev`
-  y verificar login, reserva y mapa en vivo.
-- Guía en [`../deploy/nginx/README.md`](../deploy/nginx/README.md).
-
 ## Hecho
 
 ### BUG-01 · No se puede escribir el documento del acompañante
@@ -112,6 +103,23 @@ re-renderizar el wizard.
 
 - **Commit:** `a95255e`
 - Detalle en [`items/BUG-01.md`](items/BUG-01.md).
+
+### BUG-02 · Login devuelve 500 con el proxy nginx
+
+Una instancia vieja de la API (`node dist/main`) ocupaba el puerto `4000` y
+respondía con error inesperado antes de validar credenciales. Se reinició el
+entorno y se agregó `predev` para detectar puertos ocupados.
+
+- **Commit:** `7bc0222`
+- Detalle en [`items/BUG-02.md`](items/BUG-02.md).
+
+### TEC-04 · Configurar nginx local para desarrollo
+
+Proxy en `http://localhost` con `/api/` → `127.0.0.1:4000` y `/` → `127.0.0.1:3000`.
+Verificado con login, reserva, SSE y cabeceras de seguridad.
+
+- **Commit:** `2dcd96a`
+- Guía y diagnóstico en [`../deploy/nginx/README.md`](../deploy/nginx/README.md).
 
 ### TEC-01 · Ignorar `apps/api/data/` y revisar `package-lock.json`
 

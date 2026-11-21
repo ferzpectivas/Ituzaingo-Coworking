@@ -38,14 +38,19 @@ soporte y reuniones.
 | Comprometido | Prioridad | Estado |
 | --- | --- | --- |
 | BUG-01 · Documento del acompañante no editable | P1 | Hecho |
+| BUG-02 · Login devuelve 500 con el proxy nginx | P1 | Hecho |
 | TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
-| TEC-04 · Configurar nginx local para desarrollo | P2 | En revisión |
+| TEC-04 · Configurar nginx local para desarrollo | P2 | Hecho |
 
 - **Fuera de alcance:** implementación de REQ-01.
 - **Riesgos:**
   - El ajuste de foco del `Modal` afecta a todos los diálogos: ya se probaron
     equipos, operaciones y cuenta.
+  - No ejecutar `npm run build` con `npm run dev` activo: el build reescribe
+    `dist` y el watcher puede reiniciar en un estado intermedio.
 - **Dependencias:** ninguna.
+- **Verificación de nginx:** login, `/auth/me`, alta y cancelación de reserva y SSE
+  probados por `http://localhost` el 2026-11-21.
 
 ## Semana 2 · 30 nov al 4 dic 2026
 
