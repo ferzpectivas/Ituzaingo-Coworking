@@ -41,6 +41,7 @@ soporte y reuniones.
 | BUG-02 · Login devuelve 500 con el proxy nginx | P1 | Hecho |
 | TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
 | TEC-04 · Configurar nginx local para desarrollo | P2 | Hecho |
+| REQ-02 · Horario de lunes a viernes 08:00 a 18:00 | P2 | En curso |
 
 - **Fuera de alcance:** implementación de REQ-01.
 - **Riesgos:**

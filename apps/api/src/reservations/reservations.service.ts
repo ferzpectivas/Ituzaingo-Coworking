@@ -16,7 +16,7 @@ import {
   seal,
 } from '../common/crypto';
 import { addDays, isoFor, todayISO } from '../common/time';
-import { assertBookableDate, resolveDate, slotOf } from '../common/slots';
+import { assertBookableDate, isOpenDate, resolveDate, slotLabel, slotOf } from '../common/slots';
 import { displayName, holderOf } from '../common/serializers';
 import type {
   AccessoryCode,
@@ -201,8 +201,9 @@ export class ReservationsService {
     partySize: number,
   ): Array<{ date: string; slotId: string; label: string; freeSeats: number }> {
     const out: Array<{ date: string; slotId: string; label: string; freeSeats: number }> = [];
-    for (let dayOffset = 0; dayOffset <= 2 && out.length < 4; dayOffset += 1) {
+    for (let dayOffset = 0; dayOffset <= 7 && out.length < 4; dayOffset += 1) {
       const currentDate = addDays(date, dayOffset);
+      if (!isOpenDate(currentDate, state.settings)) continue;
       for (const slot of state.settings.slots) {
         if (dayOffset === 0 && slot.id === slotId) continue;
         const free = this.freeSeats(state, spaceCode, currentDate, slot.id).length;
@@ -1024,7 +1025,6 @@ export class ReservationsService {
   private detail(reservation: ReservationRecord, user: AuthUser) {
     const state = this.db.snapshot;
     const space = this.db.floorplan.spaces.find((s) => s.code === reservation.spaceCode);
-    const slot = state.settings.slots.find((s) => s.id === reservation.slotId);
     const holder = holderOf(reservation);
     const full = user.role !== 'socio' || reservation.holderUserId === user.userId;
     const assignments = state.checkouts.filter((c) => reservation.equipmentAssignmentIds.includes(c.id));
@@ -1075,7 +1075,10 @@ export class ReservationsService {
         color: space?.color,
       },
       date: reservation.date,
-      slot: { id: reservation.slotId, label: slot?.label ?? reservation.slotId },
+      slot: {
+        id: reservation.slotId,
+        label: slotLabel(state.settings, reservation.slotId, reservation.startsAt, reservation.endsAt),
+      },
       startsAt: reservation.startsAt,
       endsAt: reservation.endsAt,
       status: reservation.status,

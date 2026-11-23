@@ -55,8 +55,8 @@ const faqs = [
     a: 'Depende del ambiente: las mesas de Coworking admiten hasta 6 personas, el Aula tiene 10 pupitres individuales y la Sala de Reuniones se reserva completa para 8 personas.',
   },
   {
-    q: '¿Las franjas son de cuatro horas?',
-    a: 'Sí. Hay tres franjas: 09:00 a 13:00, 14:00 a 18:00 y 18:00 a 22:00. Podés reservar hasta 45 días de anticipación.',
+    q: '¿Cuál es el horario del espacio?',
+    a: 'El espacio abre de lunes a viernes de 08:00 a 18:00. Hay tres franjas: 08:00 a 11:00, 11:00 a 15:00 y 15:00 a 18:00. Podés reservar hasta 45 días de anticipación.',
   },
   {
     q: '¿Puedo cancelar mi reserva?',
@@ -190,7 +190,7 @@ export default function HomePage() {
               <div className="absolute -bottom-5 -left-3 hidden rounded-2xl border border-line bg-white px-4 py-3 shadow-lg sm:block">
                 <p className="flex items-center gap-2 text-xs font-semibold text-ink">
                   <Clock3 size={14} className="text-teal" />
-                  Hoy: 09 a 13 · 14 a 18 · 18 a 22
+                  Lunes a viernes · 08 a 18
                 </p>
               </div>
             </div>
@@ -201,7 +201,7 @@ export default function HomePage() {
         <section aria-label="Franjas horarias" className="border-y border-line bg-white">
           <div className="container-page grid gap-4 py-6 sm:grid-cols-3">
             {[
-              { icon: Clock3, title: 'Tres franjas diarias', text: 'Mañana, tarde y noche, de cuatro horas cada una.' },
+              { icon: Clock3, title: 'Tres franjas diarias', text: 'De 08:00 a 11:00, de 11:00 a 15:00 y de 15:00 a 18:00, de lunes a viernes.' },
               { icon: MapPinned, title: 'Tres ambientes', text: 'Coworking, Aula de capacitaciones y Sala de Reuniones.' },
               { icon: Accessibility, title: 'Accesible y gratuito', text: 'Planta baja, circulación amplia y atención municipal.' },
             ].map((item) => (
@@ -448,8 +448,8 @@ export default function HomePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold">Acceso</p>
             <ul className="mt-3 space-y-2 text-sm text-white/75">
               <li>Ituzaingó, Buenos Aires</li>
-              <li>Lunes a sábado</li>
-              <li>09:00 a 22:00</li>
+              <li>Lunes a viernes</li>
+              <li>08:00 a 18:00</li>
               <li>
                 <Link href="/ingresar" className="underline decoration-gold/60 underline-offset-4 hover:text-gold">
                   Ingresar al sistema

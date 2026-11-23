@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { JsonDbService } from '../storage/json-db.service';
 import type { AuthUser } from '../common/auth-user';
 import { displayName, holderOf, isFullView } from '../common/serializers';
-import { currentSlot, resolveDate, slotOf } from '../common/slots';
+import { currentSlot, isOpenDate, nextOpenDate as computeNextOpenDate, resolveDate, slotOf } from '../common/slots';
 import { todayISO } from '../common/time';
 import type {
   EquipmentAssignmentRecord,
@@ -15,12 +15,16 @@ export class SpacesService {
   constructor(private readonly db: JsonDbService) {}
 
   getConfig() {
+    const state = this.db.snapshot;
+    const today = todayISO();
     return {
-      settings: this.db.snapshot.settings,
+      settings: state.settings,
       spaces: this.db.floorplan.spaces,
-      today: todayISO(),
-      currentSlotId: currentSlot(this.db.snapshot.settings).id,
-      revision: this.db.snapshot.meta.revision,
+      today,
+      todayOpen: isOpenDate(today, state.settings),
+      nextOpenDate: computeNextOpenDate(today, state.settings),
+      currentSlotId: currentSlot(state.settings).id,
+      revision: state.meta.revision,
     };
   }
 
@@ -32,10 +36,12 @@ export class SpacesService {
     const state = this.db.snapshot;
     return this.db.floorplan.spaces.map((space) => {
       const today = todayISO();
+      const open = isOpenDate(today, state.settings);
       const slot = currentSlot(state.settings);
       const occupied = new Set<string>();
       for (const reservation of state.reservations) {
         if (
+          open &&
           reservation.spaceCode === space.code &&
           reservation.date === today &&
           reservation.slotId === slot.id &&
@@ -68,13 +74,16 @@ export class SpacesService {
     const state = this.db.snapshot;
     const date = resolveDate(dateInput);
     const slot = slotOf(state.settings, slotId);
-    const reservations = state.reservations.filter(
-      (r) =>
-        r.date === date &&
-        r.slotId === slot.id &&
-        r.status !== 'cancelada' &&
-        r.status !== 'no_show',
-    );
+    const closed = !isOpenDate(date, state.settings);
+    const reservations = closed
+      ? []
+      : state.reservations.filter(
+          (r) =>
+            r.date === date &&
+            r.slotId === slot.id &&
+            r.status !== 'cancelada' &&
+            r.status !== 'no_show',
+        );
 
     const seatOwner = new Map<string, ReservationRecord>();
     for (const reservation of reservations) {
@@ -139,6 +148,7 @@ export class SpacesService {
       revision: state.meta.revision,
       date,
       slot,
+      closed,
       timezone: state.settings.timezone,
       totals: {
         capacity: spaces.reduce((acc, s) => acc + (s.capacity ?? 0), 0),
@@ -207,6 +217,17 @@ export class SpacesService {
     const state = this.db.snapshot;
     const date = resolveDate(options.date);
     const slot = slotOf(state.settings, options.slotId);
+    if (!isOpenDate(date, state.settings)) {
+      return {
+        date,
+        slot,
+        closed: true,
+        spaces: [],
+        equipment: [],
+        revision: state.meta.revision,
+        generatedAt: new Date().toISOString(),
+      };
+    }
     const activeReservations = state.reservations.filter(
       (r) =>
         r.date === date &&
@@ -283,6 +304,7 @@ export class SpacesService {
     return {
       date,
       slot,
+      closed: false,
       spaces,
       equipment,
       revision: state.meta.revision,

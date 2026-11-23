@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { JsonDbService } from '../storage/json-db.service';
 import { addDays, daysBetween, todayISO, weekday } from '../common/time';
+import { countOpenDays, isOpenDate, slotLabel } from '../common/slots';
 import type { ReservationRecord } from '../storage/types';
 
 export type ReportFormat = 'csv' | 'xlsx' | 'pdf';
@@ -66,17 +67,20 @@ export class ReportsService {
     const slots = state.settings.slots;
     const reservations = state.reservations.filter((r) => this.inRange(r, range, input.space));
     const active = reservations.filter((r) => ACTIVE.has(r.status));
+    const activeOpen = active.filter((r) => isOpenDate(r.date, state.settings));
+    const openDays = countOpenDays(range.from, range.to, state.settings);
     const totalCapacity = spaces.reduce((acc, s) => acc + (s.capacity ?? 0), 0);
-    const availableSeatSlots = totalCapacity * slots.length * range.days;
-    const occupiedSeatSlots = active.reduce((acc, r) => acc + r.partySize, 0);
+    const availableSeatSlots = totalCapacity * slots.length * openDays;
+    const occupiedSeatSlots = activeOpen.reduce((acc, r) => acc + r.partySize, 0);
     const occupancyRate = availableSeatSlots ? occupiedSeatSlots / availableSeatSlots : 0;
 
     const bySpace = spaces.map((space) => {
       const spaceReservations = reservations.filter((r) => r.spaceCode === space.code);
       const spaceActive = spaceReservations.filter((r) => ACTIVE.has(r.status));
+      const spaceActiveOpen = spaceActive.filter((r) => isOpenDate(r.date, state.settings));
       const capacity = space.capacity ?? 0;
-      const available = capacity * slots.length * range.days;
-      const occupied = spaceActive.reduce((acc, r) => acc + r.partySize, 0);
+      const available = capacity * slots.length * openDays;
+      const occupied = spaceActiveOpen.reduce((acc, r) => acc + r.partySize, 0);
       return {
         code: space.code,
         name: space.name,
@@ -95,8 +99,9 @@ export class ReportsService {
     const bySlot = slots.map((slot) => {
       const slotReservations = reservations.filter((r) => r.slotId === slot.id);
       const slotActive = slotReservations.filter((r) => ACTIVE.has(r.status));
-      const available = totalCapacity * range.days;
-      const occupied = slotActive.reduce((acc, r) => acc + r.partySize, 0);
+      const slotActiveOpen = slotActive.filter((r) => isOpenDate(r.date, state.settings));
+      const available = totalCapacity * openDays;
+      const occupied = slotActiveOpen.reduce((acc, r) => acc + r.partySize, 0);
       return {
         id: slot.id,
         label: slot.label,
@@ -118,6 +123,7 @@ export class ReportsService {
 
     const byDay: Array<{
       date: string;
+      open: boolean;
       reservations: number;
       people: number;
       cancelled: number;
@@ -126,12 +132,14 @@ export class ReportsService {
     }> = [];
     for (let i = 0; i < range.days; i += 1) {
       const date = addDays(range.from, i);
+      const open = isOpenDate(date, state.settings);
       const dayReservations = reservations.filter((r) => r.date === date);
       const dayActive = dayReservations.filter((r) => ACTIVE.has(r.status));
-      const available = totalCapacity * slots.length;
+      const available = open ? totalCapacity * slots.length : 0;
       const occupied = dayActive.reduce((acc, r) => acc + r.partySize, 0);
       byDay.push({
         date,
+        open,
         reservations: dayReservations.length,
         people: occupied,
         cancelled: dayReservations.filter((r) => r.status === 'cancelada').length,
@@ -143,9 +151,10 @@ export class ReportsService {
     const assignments = state.checkouts.filter(
       (c) => c.date >= range.from && c.date <= range.to,
     );
+    const assignmentsOpen = assignments.filter((c) => isOpenDate(c.date, state.settings));
     const incidents = assignments.filter((c) => c.incident);
     const equipmentItems = state.gear.filter((g) => g.type);
-    const equipmentAvailable = equipmentItems.length * slots.length * range.days;
+    const equipmentAvailable = equipmentItems.length * slots.length * openDays;
     const equipment = {
       computers: equipmentItems.filter((g) => g.type === 'computadora').length,
       projectors: equipmentItems.filter((g) => g.type === 'proyector').length,
@@ -154,14 +163,14 @@ export class ReportsService {
       returns: assignments.filter((c) => c.returned).length,
       incidents: incidents.length,
       incidentsOpen: incidents.filter((c) => c.incident && !c.incident.resolved).length,
-      utilizationRate: equipmentAvailable ? assignments.length / equipmentAvailable : 0,
+      utilizationRate: equipmentAvailable ? assignmentsOpen.length / equipmentAvailable : 0,
     };
 
-    const peakDay = [...byDay].sort((a, b) => b.people - a.people)[0];
+    const peakDay = [...byDay].filter((day) => day.open).sort((a, b) => b.people - a.people)[0];
     const peakSlot = [...bySlot].sort((a, b) => b.people - a.people)[0];
 
     return {
-      range: { from: range.from, to: range.to, days: range.days, label: range.label },
+      range: { from: range.from, to: range.to, days: range.days, openDays, label: range.label },
       generatedAt: new Date().toISOString(),
       timezone: state.settings.timezone,
       totals: {
@@ -205,12 +214,11 @@ export class ReportsService {
       .map((r) => {
         const space = this.db.floorplan.spaces.find((s) => s.code === r.spaceCode);
         const holder = r.people.find((p) => p.personId === r.holderPersonId) ?? r.people[0];
-        const slot = state.settings.slots.find((s) => s.id === r.slotId);
         const assignments = state.checkouts.filter((c) => r.equipmentAssignmentIds.includes(c.id));
         return {
           codigo: r.code,
           fecha: r.date,
-          franja: slot?.label ?? r.slotId,
+          franja: slotLabel(state.settings, r.slotId, r.startsAt, r.endsAt),
           espacio: space?.name ?? r.spaceCode,
           estado: r.status,
           titular: holder ? `${holder.firstName} ${holder.lastName}` : '',

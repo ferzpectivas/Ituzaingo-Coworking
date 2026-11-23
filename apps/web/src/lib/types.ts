@@ -25,6 +25,7 @@ export interface Settings {
   organization: string;
   address: string;
   timezone: string;
+  openingDays: number[];
   slots: Slot[];
   maxAdvanceDays: number;
   cancellationHours: number;
@@ -136,6 +137,8 @@ export interface ConfigResponse {
   settings: Settings;
   spaces: Space[];
   today: string;
+  todayOpen: boolean;
+  nextOpenDate: string;
   currentSlotId: string;
   revision: number;
 }
@@ -188,6 +191,7 @@ export interface Occupancy {
   revision: number;
   date: string;
   slot: Slot;
+  closed: boolean;
   timezone: string;
   totals: { capacity: number; occupiedSeats: number; reservations: number; people: number };
   spaces: OccupancySpace[];
@@ -231,6 +235,7 @@ export interface EquipmentAvailability {
 export interface Availability {
   date: string;
   slot: Slot;
+  closed: boolean;
   spaces: AvailabilitySpace[];
   equipment: EquipmentAvailability[];
   revision: number;
@@ -363,7 +368,7 @@ export interface TimelineEvent {
 }
 
 export interface ReportSummary {
-  range: { from: string; to: string; days: number; label: string };
+  range: { from: string; to: string; days: number; openDays: number; label: string };
   generatedAt: string;
   timezone: string;
   totals: {
@@ -403,6 +408,7 @@ export interface ReportSummary {
   byWeekday: Array<{ weekday: number; name: string; reservations: number; people: number }>;
   byDay: Array<{
     date: string;
+    open: boolean;
     reservations: number;
     people: number;
     cancelled: number;
@@ -420,7 +426,7 @@ export interface ReportSummary {
     utilizationRate: number;
   };
   peak: {
-    day: { date: string; reservations: number; people: number; occupancyRate: number } | null;
+    day: { date: string; open?: boolean; reservations: number; people: number; occupancyRate: number } | null;
     slot: { id: string; label: string; reservations: number; people: number } | null;
   };
 }

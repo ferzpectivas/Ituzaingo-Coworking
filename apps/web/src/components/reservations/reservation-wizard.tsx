@@ -16,7 +16,7 @@ import {
   Users,
 } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
-import { addDaysISO, formatDateLong, todayISO } from '@/lib/format';
+import { addDaysISO, DEFAULT_OPENING_DAYS, formatDateLong, isOpenDate, nextOpenDateISO, todayISO } from '@/lib/format';
 import type {
   Availability,
   ConfigResponse,
@@ -79,9 +79,11 @@ export function ReservationWizard({
 }: WizardProps) {
   const { user } = useAuth();
   const { notify } = useToast();
+  const today = config?.today ?? todayISO();
+  const openingDays = config?.settings.openingDays ?? DEFAULT_OPENING_DAYS;
   const [step, setStep] = useState(0);
   const [spaceCode, setSpaceCode] = useState('');
-  const [date, setDate] = useState(defaultDate ?? config?.today ?? todayISO());
+  const [date, setDate] = useState(nextOpenDateISO(defaultDate ?? today, openingDays));
   const [slotId, setSlotId] = useState(defaultSlot ?? config?.currentSlotId ?? 'manana');
   const [partySize, setPartySize] = useState(1);
   const [people, setPeople] = useState<FormPerson[]>([emptyPerson('titular')]);
@@ -99,13 +101,12 @@ export function ReservationWizard({
   >([]);
   const [created, setCreated] = useState<ReservationDetail | null>(null);
 
-  const today = config?.today ?? todayISO();
   const maxDate = addDaysISO(today, config?.settings.maxAdvanceDays ?? 45);
 
   const reset = useCallback(() => {
     setStep(0);
     setSpaceCode(defaultSpace ?? '');
-    setDate(defaultDate ?? config?.today ?? todayISO());
+    setDate(nextOpenDateISO(defaultDate ?? config?.today ?? todayISO(), openingDays));
     setSlotId(defaultSlot ?? config?.currentSlotId ?? 'manana');
     setPartySize(1);
     setPeople([
@@ -122,7 +123,7 @@ export function ReservationWizard({
     setSubmitError(null);
     setAlternatives([]);
     setCreated(null);
-  }, [config, defaultDate, defaultSlot, defaultSpace, user]);
+  }, [config, defaultDate, defaultSlot, defaultSpace, openingDays, user]);
 
   useEffect(() => {
     if (open) reset();
@@ -224,6 +225,9 @@ export function ReservationWizard({
     if (!date) next.date = 'Elegí una fecha.';
     if (date < today) next.date = 'La fecha no puede ser anterior a hoy.';
     if (date > maxDate) next.date = `La fecha máxima es ${formatDateLong(maxDate)}.`;
+    if (date && !isOpenDate(date, openingDays)) {
+      next.date = 'El espacio está cerrado los fines de semana. Elegí un día de lunes a viernes.';
+    }
     if (!slotId) next.slot = 'Elegí una franja.';
     if (spaceCode && maxParty === 0) {
       next.party =
@@ -500,7 +504,12 @@ export function ReservationWizard({
                   {!availability && loadingAvailability ? (
                     <div className="skeleton h-20 sm:col-span-3" />
                   ) : null}
-                  {availability && availability.spaces.length === 0 ? (
+                  {availability?.closed ? (
+                    <p className="text-sm text-muted sm:col-span-3">
+                      El espacio está cerrado ese día. Elegí un día de lunes a viernes.
+                    </p>
+                  ) : null}
+                  {availability && !availability.closed && availability.spaces.length === 0 ? (
                     <p className="text-sm text-muted">No hay ambientes disponibles.</p>
                   ) : null}
                 </div>
@@ -520,9 +529,14 @@ export function ReservationWizard({
                     min={today}
                     max={maxDate}
                     onChange={(event) => {
-                      setDate(event.target.value);
+                      const value = event.target.value;
+                      setDate(value);
                       setSpaceCode('');
-                      setErrors({});
+                      setErrors(
+                        value && !isOpenDate(value, openingDays)
+                          ? { date: 'El espacio está cerrado los fines de semana. Elegí un día de lunes a viernes.' }
+                          : {},
+                      );
                     }}
                   />
                   {errors.date ? <p className="mt-1 text-xs text-rose">{errors.date}</p> : null}

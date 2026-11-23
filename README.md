@@ -54,7 +54,8 @@ documento); **(3)** equipamiento opcional con su accesorio obligatorio.
 - Proyector → caja, cable HDMI, cable VGA y cable de energía.
 - La **Sala de Reuniones** se reserva completa: exige los 8 asientos libres y fija
   automáticamente 8 personas.
-- Franjas: `manana` 09–13, `tarde` 14–18, `noche` 18–22 (America/Argentina/Buenos_Aires).
+- Horario: lunes a viernes de 08:00 a 18:00. Franjas: `manana` 08–11,
+  `mediodia` 11–15 y `tarde` 15–18 (America/Argentina/Buenos_Aires).
 
 Capacidad total: **36 puestos** — Coworking 18 (3 mesas × 6), Aula 10 pupitres,
 Sala de Reuniones 8.

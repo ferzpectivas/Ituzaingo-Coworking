@@ -164,6 +164,7 @@ export interface SettingsRecord {
   organization: string;
   address: string;
   timezone: string;
+  openingDays: number[];
   slots: SlotConfig[];
   maxAdvanceDays: number;
   cancellationHours: number;

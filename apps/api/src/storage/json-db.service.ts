@@ -6,6 +6,7 @@ import { appConfig } from '../config';
 import FLOORPLAN_JSON from '../floorplan/floorplan.generated.json';
 import type { FloorplanManifest } from '../floorplan/types';
 import { randomId } from '../common/crypto';
+import { normalizeSettings } from '../common/slots';
 import { buildSeedState } from './seed';
 import { EventsService } from './events.service';
 import type { AuditEventRecord, DbState, ReservationRecord, Role } from './types';
@@ -147,6 +148,13 @@ export class JsonDbService implements OnModuleInit {
     }
 
     validateState(this.state, FLOORPLAN);
+    const migrated = normalizeSettings(this.state.settings);
+    if (migrated) {
+      this.state.meta.revision += 1;
+      this.state.meta.updatedAt = new Date().toISOString();
+      await this.persist(this.state);
+      this.logger.log('Configuración horaria migrada a lunes a viernes, 08:00–18:00.');
+    }
     this.logger.log(
       `Datos cargados: ${this.state.users.length} usuarios, ` +
         `${this.state.reservations.length} reservas, ${this.state.gear.length} equipos.`,

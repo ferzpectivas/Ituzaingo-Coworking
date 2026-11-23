@@ -1,6 +1,7 @@
 import FLOORPLAN_JSON from '../floorplan/floorplan.generated.json';
 import type { FloorplanManifest } from '../floorplan/types';
-import { addDays, isoFor, todayISO } from '../common/time';
+import { addDays, isoFor, todayISO, weekday } from '../common/time';
+import { DEFAULT_OPENING_DAYS, defaultSlots } from '../common/slots';
 import { hashDocument, hashPasswordSync, lastFour, randomId, seal } from '../common/crypto';
 import type {
   AccessoryCode,
@@ -28,11 +29,8 @@ const SETTINGS: SettingsRecord = {
   organization: 'Municipalidad de Ituzaingó',
   address: 'Ituzaingó, Buenos Aires',
   timezone: 'America/Argentina/Buenos_Aires',
-  slots: [
-    { id: 'manana', label: '09:00 a 13:00', start: '09:00', end: '13:00' },
-    { id: 'tarde', label: '14:00 a 18:00', start: '14:00', end: '18:00' },
-    { id: 'noche', label: '18:00 a 22:00', start: '18:00', end: '22:00' },
-  ],
+  openingDays: [...DEFAULT_OPENING_DAYS],
+  slots: defaultSlots(),
   maxAdvanceDays: 45,
   cancellationHours: 2,
   checkinGraceMinutes: 30,
@@ -478,9 +476,10 @@ export function buildSeedState(): DbState {
     return reservation;
   }
 
-  // Reservas pasadas para analytics (35 días)
+  // Reservas pasadas para analytics (35 días hábiles)
   for (let offset = -35; offset <= -1; offset += 1) {
     const date = addDays(today, offset);
+    if (!SETTINGS.openingDays.includes(weekday(date))) continue;
     const count = 2 + (Math.abs(offset) % 3 === 0 ? 1 : 0);
     for (let i = 0; i < count; i += 1) {
       const slot = SETTINGS.slots[(Math.abs(offset) + i) % SETTINGS.slots.length];
@@ -505,77 +504,86 @@ export function buildSeedState(): DbState {
     }
   }
 
-  // Hoy: escenas clave para el mapa en vivo
-  const todayPlan: Array<{
-    slotId: string;
-    spaceCode: string;
-    partySize: number;
-    people: string[];
-    equipment?: Array<{ type: EquipmentType; count: number }>;
-    notes?: string;
-  }> = [
-    {
-      slotId: 'manana',
-      spaceCode: 'salon',
-      partySize: 2,
-      people: ['per_maria', 'per_ana'],
-      notes: 'Capacitación de introducción al coworking.',
-    },
-    {
-      slotId: 'manana',
-      spaceCode: 'coworking',
-      partySize: 3,
-      people: ['per_pablo', 'per_diego', 'per_lucia'],
-      equipment: [{ type: 'computadora', count: 1 }],
-    },
-    {
-      slotId: 'tarde',
-      spaceCode: 'sala-reuniones',
-      partySize: 6,
-      people: ['per_lucas', 'per_carla', 'per_sofia', 'per_diego', 'per_lucia', 'per_ana'],
-      equipment: [{ type: 'proyector', count: 1 }],
-      notes: 'Presentación de proyecto para una cooperativa local.',
-    },
-    {
-      slotId: 'tarde',
-      spaceCode: 'coworking',
-      partySize: 4,
-      people: ['per_juan', 'per_maria', 'per_lucas', 'per_ana'],
-      equipment: [
-        { type: 'computadora', count: 2 },
-        { type: 'proyector', count: 0 },
-      ],
-      notes: 'Equipo de desarrollo. Reserva de referencia con 3 acompañantes.',
-    },
-  ];
-  for (const plan of todayPlan) {
-    createReservation({
-      date: today,
-      slotId: plan.slotId,
-      spaceCode: plan.spaceCode,
-      partySize: plan.partySize,
-      peopleIds: plan.people,
-      holderPersonId: plan.people[0],
-      equipment: plan.equipment,
-      notes: plan.notes,
-      createdAt: new Date(Date.parse(`${today}T08:00:00-03:00`) - 86_400_000).toISOString(),
-    });
+  // Hoy: escenas clave para el mapa en vivo (sólo si el espacio está abierto)
+  if (SETTINGS.openingDays.includes(weekday(today))) {
+    const todayPlan: Array<{
+      slotId: string;
+      spaceCode: string;
+      partySize: number;
+      people: string[];
+      equipment?: Array<{ type: EquipmentType; count: number }>;
+      notes?: string;
+    }> = [
+      {
+        slotId: 'manana',
+        spaceCode: 'salon',
+        partySize: 2,
+        people: ['per_maria', 'per_ana'],
+        notes: 'Capacitación de introducción al coworking.',
+      },
+      {
+        slotId: 'manana',
+        spaceCode: 'coworking',
+        partySize: 3,
+        people: ['per_pablo', 'per_diego', 'per_lucia'],
+        equipment: [{ type: 'computadora', count: 1 }],
+      },
+      {
+        slotId: 'tarde',
+        spaceCode: 'sala-reuniones',
+        partySize: 6,
+        people: ['per_lucas', 'per_carla', 'per_sofia', 'per_diego', 'per_lucia', 'per_ana'],
+        equipment: [{ type: 'proyector', count: 1 }],
+        notes: 'Presentación de proyecto para una cooperativa local.',
+      },
+      {
+        slotId: 'tarde',
+        spaceCode: 'coworking',
+        partySize: 4,
+        people: ['per_juan', 'per_maria', 'per_lucas', 'per_ana'],
+        equipment: [
+          { type: 'computadora', count: 2 },
+          { type: 'proyector', count: 0 },
+        ],
+        notes: 'Equipo de desarrollo. Reserva de referencia con 3 acompañantes.',
+      },
+    ];
+    for (const plan of todayPlan) {
+      createReservation({
+        date: today,
+        slotId: plan.slotId,
+        spaceCode: plan.spaceCode,
+        partySize: plan.partySize,
+        peopleIds: plan.people,
+        holderPersonId: plan.people[0],
+        equipment: plan.equipment,
+        notes: plan.notes,
+        createdAt: new Date(Date.parse(`${today}T08:00:00-03:00`) - 86_400_000).toISOString(),
+      });
+    }
   }
 
-  // Mañana y pasado: disponibilidad futura
-  const futurePlan: Array<{ offset: number; slotId: string; spaceCode: string; partySize: number; base: number }> = [
-    { offset: 1, slotId: 'manana', spaceCode: 'coworking', partySize: 2, base: 2 },
-    { offset: 1, slotId: 'tarde', spaceCode: 'sala-reuniones', partySize: 8, base: 3 },
-    { offset: 2, slotId: 'tarde', spaceCode: 'salon', partySize: 4, base: 5 },
-    { offset: 3, slotId: 'noche', spaceCode: 'coworking', partySize: 3, base: 7 },
+  // Próximos días hábiles: disponibilidad futura
+  const futurePlan: Array<{ slotId: string; spaceCode: string; partySize: number; base: number }> = [
+    { slotId: 'manana', spaceCode: 'coworking', partySize: 2, base: 2 },
+    { slotId: 'tarde', spaceCode: 'sala-reuniones', partySize: 8, base: 3 },
+    { slotId: 'mediodia', spaceCode: 'salon', partySize: 4, base: 5 },
+    { slotId: 'tarde', spaceCode: 'coworking', partySize: 3, base: 7 },
   ];
+  let futureOffset = 1;
   for (const plan of futurePlan) {
+    let date = addDays(today, futureOffset);
+    while (!SETTINGS.openingDays.includes(weekday(date))) {
+      futureOffset += 1;
+      date = addDays(today, futureOffset);
+    }
+    futureOffset += 1;
     const peopleIds = Array.from(
       { length: plan.partySize },
       (_, k) => PERSON_SEED[(plan.base + k) % PERSON_SEED.length].id,
     );
     createReservation({
-      date: addDays(today, plan.offset),
+      date,
       slotId: plan.slotId,
       spaceCode: plan.spaceCode,
       partySize: plan.partySize,

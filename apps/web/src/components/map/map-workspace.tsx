@@ -14,7 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { API_URL, api, ApiError } from '@/lib/api';
-import { addDaysISO, formatDateLong, percent, todayISO } from '@/lib/format';
+import { addDaysISO, DEFAULT_OPENING_DAYS, formatDateLong, isOpenDate, percent, todayISO } from '@/lib/format';
 import type { ConfigResponse, Floorplan, Occupancy, ReservationDetail } from '@/lib/types';
 import { useAuth } from '@/components/providers/auth-provider';
 import { useToast } from '@/components/providers/toast-provider';
@@ -43,7 +43,7 @@ export function MapWorkspace({ floorplan }: { floorplan: Floorplan }) {
       .then((result) => {
         if (!active) return;
         setConfig(result);
-        setDate(result.today);
+        setDate(result.todayOpen ? result.today : result.nextOpenDate);
         setSlotId(result.currentSlotId);
       })
       .catch((cause) => {
@@ -104,6 +104,7 @@ export function MapWorkspace({ floorplan }: { floorplan: Floorplan }) {
   }, [config, date, slotId, loadOccupancy]);
 
   const slots = config?.settings.slots ?? [];
+  const openingDays = config?.settings.openingDays ?? DEFAULT_OPENING_DAYS;
   const maxDate = addDaysISO(config?.today ?? todayISO(), config?.settings.maxAdvanceDays ?? 45);
   const minDate = config?.today ?? todayISO();
 
@@ -127,7 +128,11 @@ export function MapWorkspace({ floorplan }: { floorplan: Floorplan }) {
   }
 
   function shiftDate(days: number) {
-    const next = addDaysISO(date, days);
+    let next = date;
+    for (let i = 0; i < 14; i += 1) {
+      next = addDaysISO(next, days);
+      if (isOpenDate(next, openingDays)) break;
+    }
     if (next < minDate || next > maxDate) return;
     setDate(next);
   }
@@ -235,17 +240,26 @@ export function MapWorkspace({ floorplan }: { floorplan: Floorplan }) {
         </p>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Ocupación" value={percent(occupancyRate, 0)} hint={`${occupancy?.totals.occupiedSeats ?? 0} de ${occupancy?.totals.capacity ?? floorplan.totals.seats} puestos`} tone="teal" />
-        <Metric label="Puestos libres" value={Math.max(0, (occupancy?.totals.capacity ?? 0) - (occupancy?.totals.occupiedSeats ?? 0))} hint="En la franja seleccionada" />
-        <Metric label="Reservas" value={occupancy?.totals.reservations ?? 0} hint={`${occupancy?.totals.people ?? 0} personas registradas`} />
-        <Metric
-          label="Franja"
-          value={occupancy?.slot.start ?? slots.find((slot) => slot.id === slotId)?.start ?? '—'}
-          hint={occupancy ? `Hasta las ${occupancy.slot.end}` : 'Consultando'}
-          tone="gold"
-        />
-      </div>
+      {occupancy?.closed ? (
+        <div className="card border border-amber/30 bg-amber-soft/60 p-4">
+          <p className="font-serif text-lg text-ink">Espacio cerrado</p>
+          <p className="mt-1 text-sm text-muted">
+            El espacio funciona de lunes a viernes de 08:00 a 18:00. Elegí un día hábil para ver la ocupación.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Metric label="Ocupación" value={percent(occupancyRate, 0)} hint={`${occupancy?.totals.occupiedSeats ?? 0} de ${occupancy?.totals.capacity ?? floorplan.totals.seats} puestos`} tone="teal" />
+          <Metric label="Puestos libres" value={Math.max(0, (occupancy?.totals.capacity ?? 0) - (occupancy?.totals.occupiedSeats ?? 0))} hint="En la franja seleccionada" />
+          <Metric label="Reservas" value={occupancy?.totals.reservations ?? 0} hint={`${occupancy?.totals.people ?? 0} personas registradas`} />
+          <Metric
+            label="Franja"
+            value={occupancy?.slot.start ?? slots.find((slot) => slot.id === slotId)?.start ?? '—'}
+            hint={occupancy ? `Hasta las ${occupancy.slot.end}` : 'Consultando'}
+            tone="gold"
+          />
+        </div>
+      )}
 
       <div className="grid gap-5 xl:grid-cols-[1.75fr_1fr]">
         <div className="space-y-4">
@@ -393,7 +407,7 @@ export function MapWorkspace({ floorplan }: { floorplan: Floorplan }) {
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-line bg-white p-3.5">
           <p className="flex items-center gap-2 text-xs font-semibold text-ink">
-            <Clock3 size={14} className="text-teal" /> Franjas de 4 horas
+            <Clock3 size={14} className="text-teal" /> Franjas de 08:00 a 18:00
           </p>
           <p className="mt-1 text-[0.7rem] leading-relaxed text-muted">
             {slots.map((slot) => `${slot.start}–${slot.end}`).join(' · ')}
