@@ -33,7 +33,8 @@ soporte y reuniones.
 ## Semana 1 · 23 al 27 nov 2026
 
 **Estado:** en curso (adelantada al 20/11)
-**Objetivo:** estabilizar la reserva con acompañantes y decidir la salida de Docker.
+**Objetivo:** estabilizar la reserva con acompañantes, adecuar espacios y
+equipamiento al relevamiento y decidir la salida de Docker.
 
 | Comprometido | Prioridad | Estado |
 | --- | --- | --- |
@@ -41,6 +42,7 @@ soporte y reuniones.
 | BUG-02 · Login devuelve 500 con el proxy nginx | P1 | Hecho |
 | TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
 | TEC-04 · Configurar nginx local para desarrollo | P2 | Hecho |
+| REQ-03 · Adecuar espacios y equipamiento al relevamiento | P2 | Hecho |
 
 - **Fuera de alcance:** implementación de REQ-01.
 - **Riesgos:**
@@ -51,6 +53,9 @@ soporte y reuniones.
 - **Dependencias:** ninguna.
 - **Verificación de nginx:** login, `/auth/me`, alta y cancelación de reserva y SSE
   probados por `http://localhost` el 2026-11-21.
+- **Cierre REQ-03:** capacidades 20/15/10 e inventario real verificados el
+  2026-11-24 con `npm run typecheck`, `npm run build` y prueba manual de socio,
+  administrador y director sobre una semilla nueva. Commit `0e22a8e`.
 
 ## Semana 2 · 30 nov al 4 dic 2026
 

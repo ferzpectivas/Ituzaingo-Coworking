@@ -7,6 +7,38 @@ Cada entrada debe incluir fecha, ítem, estado, commit, cambios, verificación y
 notas. Los ítems cerrados también se reflejan en
 [`BACKLOG.md`](BACKLOG.md).
 
+## 2026-11-24 · REQ-03 — Espacios y equipamiento del relevamiento
+
+- **Ítems:** REQ-03.
+- **Estado:** Hecho.
+- **Commit:** `0e22a8e`
+- **Cambios:**
+  - Plano: Coworking 1 con 20 puestos, Aula de Capacitaciones con 15 pupitres y
+    Sala de Reuniones con 10 (45 asientos, 19 muebles). El generador completa los
+    asientos que faltaban en el SVG y valida capacidades y límites de cada
+    ambiente.
+  - Inventario semilla: `NB-001`, `NB-002`, `PJ-001` y `PZ-001`. La pizarra
+    desplazable es un tipo de equipamiento reservable sin accesorios obligatorios.
+  - API: DTOs, disponibilidad, asignación de equipos, reportes y resumen público
+    incorporan pizarras; el límite de personas por reserva pasa de 12 a 20.
+  - Web: asistente con pizarra y tope de 20 personas, panel de equipamiento con
+    filtros y alta de pizarras, home, mapa y tablero del director actualizados.
+  - `README.md` con capacidades, inventario y totales del plano reales.
+- **Verificación:**
+  - `npm run typecheck` y `npm run build` completos, sin errores.
+  - Prueba manual sobre API con `DATA_DIR` temporal y semilla nueva:
+    - Resumen público: 20/15/10 puestos y 2 notebooks, 1 proyector y 1 pizarra.
+    - Reserva de 20 personas en Coworking, 15 en el Aula y 10 en la Sala de
+      Reuniones, con la cantidad de asientos esperada.
+    - Pizarra pedida en una reserva, entregada y devuelta desde el panel sin
+      accesorios obligatorios.
+    - Reporte del director con el indicador de pizarras.
+- **Notas:** la semilla sólo se genera cuando no hay datos. El entorno local
+  conserva `data/` con el inventario anterior; para ver el nuevo hay que
+  respaldarlo y regenerarlo. El `mapa.drawio.svg` sigue dibujando 10 pupitres y
+  18 puestos de Coworking: el manifiesto generado es la fuente de la UI hasta que
+  se actualice el SVG fuente.
+
 ## 2026-11-21 · BUG-02 — Login 500 con nginx
 
 - **Ítems:** BUG-02.

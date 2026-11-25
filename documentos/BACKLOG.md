@@ -55,6 +55,7 @@ justificación).
 | BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | Hecho | 1 | [ficha](items/BUG-01.md) |
 | BUG-02 | Login devuelve 500 con el proxy nginx | bug | infra | P1 | S | Hecho | 1 | [ficha](items/BUG-02.md) |
 | REQ-01 | Quitar Docker del despliegue | req | infra | P2 | L | Refinado | 2 | [ficha](items/REQ-01.md) |
+| REQ-03 | Adecuar espacios y equipamiento al relevamiento | req | web | P2 | L | Hecho | 1 | [ficha](items/REQ-03.md) |
 | TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | Hecho | 0 | — |
 | TEC-02 | Actualizar README tras quitar Docker | tec | docs | P3 | S | Nuevo | 3 | — |
 | TEC-03 | ADR de despliegue sin Docker | tec | infra | P2 | S | En revisión | 1 | [ADR-001](decisiones/ADR-001-sin-docker.md) |
@@ -95,6 +96,15 @@ Estado `Propuesto`: para desarrollo local se usa **nginx**; la opción de produc
 (proxy/TLS) queda pendiente antes de implementar REQ-01.
 
 ## Hecho
+
+### REQ-03 · Adecuar espacios y equipamiento al relevamiento
+
+Coworking 1 con 20 puestos, Aula de Capacitaciones con 15 pupitres y Sala de
+Reuniones con 10. Inventario semilla real: 2 notebooks, 1 proyector y 1 pizarra
+desplazable reservable sin accesorios obligatorios.
+
+- **Commit:** `0e22a8e`
+- Detalle y verificación en [`items/REQ-03.md`](items/REQ-03.md).
 
 ### BUG-01 · No se puede escribir el documento del acompañante
 
