@@ -1,13 +1,34 @@
-# Blueprint de Render: API del Espacio de Coworking de Ituzaingó.
+# Blueprint de Render: web + API del Espacio de Coworking de Ituzaingó.
 #
-# La web ya existe en el Dashboard como servicio separado
-# (https://ituzaingo-coworking.onrender.com) y no se declara acá para no
-# modificar un servicio que ya funciona. Después de sincronizar este
-# Blueprint hay que agregarle la variable API_ORIGIN (ver README).
+# Render corre un proceso por servicio y le inyecta el mismo `PORT` a cada uno:
+# no hay que usar el `start` raíz (levanta API y web juntos) como comando de
+# arranque. Cada servicio define el suyo (`npm run start:api` / `start:web`).
+# El `npm start` raíz detecta Render y arranca sólo el proceso del servicio,
+# pero los comandos explícitos de este archivo son los recomendados.
 #
-# La API corre con el runtime nativo de Render (no Docker): el Blueprint no
-# permite elegir el stage del Dockerfile multietapa del repositorio.
+# Los dos servicios usan el runtime nativo de Render (no Docker): el Blueprint
+# no permite elegir el stage del Dockerfile multietapa del repositorio.
 services:
+  # Servicio público. Next.js resuelve la web y reescribe /api/* hacia la API
+  # con API_ORIGIN (ver apps/web/next.config.ts). El rewrite se hornea en el
+  # build, por eso API_ORIGIN tiene que estar definida antes de compilar.
+  - type: web
+    name: ituzaingo-coworking
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run floorplan && npm run build -w @ituzaingo/web
+    startCommand: npm run start:web
+    healthCheckPath: /
+    envVars:
+      - key: SERVICE_ROLE
+        value: web
+      # Origen público exacto de la API, sin barra final.
+      - key: API_ORIGIN
+        value: https://ituzaingo-coworking-api.onrender.com
+      # El navegador habla con la API por el mismo origen de la web.
+      - key: NEXT_PUBLIC_API_URL
+        value: /api/v1
+
   - type: web
     name: ituzaingo-coworking-api
     runtime: node
@@ -18,9 +39,11 @@ services:
     # --include=dev: Render define NODE_ENV=production y sin esto npm omite
     # los devDependencies, donde vive @nestjs/cli (nest build).
     buildCommand: npm ci --include=dev && npm run floorplan && npm run build -w @ituzaingo/api
-    startCommand: npm run start -w @ituzaingo/api
+    startCommand: npm run start:api
     healthCheckPath: /api/v1/health
     envVars:
+      - key: SERVICE_ROLE
+        value: api
       # Origen público exacto de la web, sin barra final (CORS y cookies).
       - key: WEB_ORIGIN
         value: https://ituzaingo-coworking.onrender.com

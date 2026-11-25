@@ -53,14 +53,32 @@ Comprobaciones:
   variable el comportamiento local (Caddy, nginx, `npm run dev`) no cambia.
   Next 16 hornea los rewrites en `routes-manifest.json` al compilar: la
   variable tiene que estar presente en el build.
-- `render.yaml` (nuevo): Blueprint con el servicio de API en Render (runtime
-  nativo `node`, health check en `/api/v1/health`, secretos `sync: false`).
+- `render.yaml`: Blueprint con los dos servicios. El de API usa runtime nativo
+  `node`, health check en `/api/v1/health` y secretos `sync: false`; el de web
+  usa build y start propios, `API_ORIGIN` y `NEXT_PUBLIC_API_URL=/api/v1`.
 - `apps/api/src/config.ts`: la API también escucha en `PORT` (lo inyecta
   Render); `API_PORT` sigue teniendo prioridad en Docker y dev local.
 - `apps/web/package.json`: `start` sin `-p 3000` para respetar `PORT`.
+- `package.json` y `tools/dev/start.mjs`: el `start` raíz sigue levantando API
+  y web en local, pero con `RENDER=true` arranca sólo el proceso del servicio
+  (`SERVICE_ROLE` o el nombre). Así un servicio creado a mano con el comando
+  por defecto no choca en el `PORT` inyectado.
 - `.nvmrc`: fija Node 24 (mismo major que el Dockerfile).
 - `README.md` y `.env.example`: sección de despliegue en Render y variable
   `API_ORIGIN`.
+
+## Segundo bloqueo: `EADDRINUSE` en el deploy
+
+El primer deploy en Render falló con
+`[api] Error: listen EADDRINUSE: address already in use 0.0.0.0:10000`. El
+servicio estaba ejecutando el `start` raíz, que levanta API y web juntos:
+Render inyecta `PORT=10000` en ambos procesos y el segundo no puede escuchar.
+Además, el servicio de API no respondía (`x-render-routing: no-server`), así
+que el rewrite tampoco tenía destino.
+
+La corrección es explícita: cada servicio usa su comando de arranque
+(`start:web` / `start:api`) y `render.yaml` declara los dos. El `start` raíz
+queda como red de seguridad para configuraciones manuales viejas.
 
 ## Verificación
 
@@ -76,17 +94,22 @@ Prueba local con la misma topología (web en `:3000` con rewrite, API en `:4000`
 | `GET /api/v1/stream/occupancy` (SSE) | `text/event-stream`; snapshot recibido con la conexión abierta |
 
 - `npm run typecheck` y `npm run build`: sin errores.
+- `npm start` con `RENDER=true` y `RENDER_SERVICE_NAME=ituzaingo-coworking-api`
+  resuelve `start:api`; con un nombre que no termina en `-api`, `start:web`.
+  En local (sin `RENDER`) sigue resolviendo `start:all`.
 
 ## Pendiente
 
-Verificar en Render después de crear el servicio de API, definir `API_ORIGIN`
-en el servicio web y redeployar (pasos en `README.md`).
+Verificar en Render después de sincronizar el Blueprint (o de fijar los
+comandos de build/start de la tabla del README) y redeployar. El servicio de
+API tiene que dejar de responder `no-server` y el login debe devolver `201`.
 
 ## Archivos involucrados
 
 - `apps/web/next.config.ts`
 - `apps/api/src/config.ts`
 - `apps/web/package.json`
+- `package.json`, `tools/dev/start.mjs`
 - `render.yaml`
 - `.nvmrc`
 - `README.md`, `.env.example`
@@ -97,6 +120,7 @@ en el servicio web y redeployar (pasos en `README.md`).
 - [x] Login devuelve `201` con cookies por el mismo origen.
 - [x] El SSE de ocupación entrega el snapshot inicial a través del proxy.
 - [x] Sin `API_ORIGIN` no se agrega ningún rewrite (local sin cambios).
+- [x] Un solo proceso por servicio en Render (sin `EADDRINUSE`).
 - [x] `npm run typecheck` y `npm run build` pasan.
 - [ ] Login funcional en `https://ituzaingo-coworking.onrender.com/ingresar`.
 
@@ -113,3 +137,4 @@ en el servicio web y redeployar (pasos en `README.md`).
 | 2026-11-25 | Nuevo | Reportado al publicar en Render: 404 en el login. |
 | 2026-11-25 | En curso | Diagnóstico: falta el enrutamiento de `/api/*` en Render. |
 | 2026-11-25 | En revisión | Rewrite + Blueprint implementados y verificados en local; falta el deploy en Render. |
+| 2026-11-25 | En revisión | Deploy con `EADDRINUSE`: un proceso por servicio y web + API en el Blueprint. |
