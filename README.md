@@ -156,6 +156,7 @@ publicar el sitio, y luego poner `SEED_ON_START=false`.
 | `WEB_ORIGIN` | Origen permitido para CORS (admite lista separada por comas) | `https://coworking.ituzaingo.gob.ar` |
 | `NEXT_PUBLIC_API_URL` | URL de la API que usa el navegador | `/api/v1` detrás de Caddy |
 | `API_ORIGIN` | Origen de la API para el rewrite de Next (sólo Render/PaaS) | `https://ituzaingo-coworking-api.onrender.com` |
+| `SERVICE_ROLE` | Proceso que arranca `npm start` en Render (`api` o `web`) | lo define `render.yaml` |
 | `JWT_SECRET` | Clave de firma de los JWT (obligatoria en producción) | 48 bytes aleatorios |
 | `PERSONAL_DATA_KEY` | Clave AES-256-GCM para documentos personales | aleatoria y estable |
 | `COOKIE_SECURE` | Cookies sólo por HTTPS | `true` en producción |
@@ -245,17 +246,27 @@ Internet → https://ituzaingo-coworking.onrender.com   (Next.js)
               └── /api/*  →  rewrite  →  https://ituzaingo-coworking-api.onrender.com  (NestJS)
 ```
 
+Los dos servicios están declarados en `render.yaml`. Cada uno corre **un solo
+proceso**: Render inyecta el mismo `PORT` en todos y dos listeners sobre ese
+puerto fallan con `EADDRINUSE`.
+
+| Servicio | Build | Start |
+| --- | --- | --- |
+| `ituzaingo-coworking` (web) | `npm ci --include=dev && npm run floorplan && npm run build -w @ituzaingo/web` | `npm run start:web` |
+| `ituzaingo-coworking-api` | `npm ci --include=dev && npm run floorplan && npm run build -w @ituzaingo/api` | `npm run start:api` |
+
 Pasos:
 
-1. Crear el servicio de API desde el Blueprint del repositorio
-   (`render.yaml`): **New → Blueprint** y elegir el repositorio. Al sincronizar,
-   completar `JWT_SECRET` y `PERSONAL_DATA_KEY` (son `sync: false`). Usar la
-   misma región que el servicio web.
-2. En el servicio **web**, agregar
-   `API_ORIGIN=https://ituzaingo-coworking-api.onrender.com` y verificar que
-   `NEXT_PUBLIC_API_URL=/api/v1` esté definida.
-3. Redeployar la web. Next 16 hornea los rewrites en `routes-manifest.json` al
-   compilar: si `API_ORIGIN` se agregó después del último build, hay que hacer
+1. **New → Blueprint** y elegir el repositorio. Si ya existen servicios con los
+   nombres de `render.yaml`, Render les aplica esta configuración en lugar de
+   crear duplicados.
+2. En el servicio de API, completar `JWT_SECRET` y `PERSONAL_DATA_KEY` (son
+   `sync: false`). Usar la misma región que el servicio web.
+3. Sincronizar. `API_ORIGIN` y `NEXT_PUBLIC_API_URL` ya vienen definidas en el
+   Blueprint para la web. Si el servicio web se creó a mano y no se adopta,
+   cargarlas en el Dashboard junto con los comandos de la tabla.
+4. Next 16 hornea los rewrites en `routes-manifest.json` al compilar: si
+   `API_ORIGIN` se agregó después del último build, hay que hacer
    **Clear build cache & deploy** para que el rewrite exista.
 
 Verificación:
@@ -273,8 +284,16 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST \
 
 Notas:
 
+- `npm start` en la raíz levanta API y web juntos en local, pero en Render
+  detecta `RENDER=true` y arranca sólo el proceso del servicio (`SERVICE_ROLE`
+  o el nombre del servicio). Aun así, el Blueprint usa los comandos explícitos
+  `start:api` / `start:web`.
 - La API escucha en `PORT` (lo inyecta Render); `API_PORT` sigue teniendo
   prioridad en Docker Compose y en el desarrollo local.
+- Si el log del deploy muestra `Error: listen EADDRINUSE ...:10000`, el
+  servicio quedó con el `start` raíz de una versión anterior o con el comando
+  `npm start` apuntando a un build viejo: redeployar con este commit o fijar el
+  Start Command de la tabla.
 - El disco de Render es efímero: con `SEED_ON_START=true` los datos demo se
   regeneran en cada arranque o redeploy. Para conservar datos reales hace falta
   un disco persistente (plan pago) o el despliegue en VPS de REQ-01.

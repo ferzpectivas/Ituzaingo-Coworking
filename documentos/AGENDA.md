@@ -40,9 +40,6 @@ equipamiento al relevamiento y decidir la salida de Docker.
 | --- | --- | --- |
 | BUG-01 · Documento del acompañante no editable | P1 | Hecho |
 | BUG-02 · Login devuelve 500 con el proxy nginx | P1 | Hecho |
-| TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
-| TEC-04 · Configurar nginx local para desarrollo | P2 | Hecho |
-| BUG-02 · Login devuelve 500 con el proxy nginx | P1 | Hecho |
 | BUG-03 · Login devuelve 404 en Render | P1 | En revisión |
 | TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
 | TEC-04 · Configurar nginx local para desarrollo | P2 | Hecho |
