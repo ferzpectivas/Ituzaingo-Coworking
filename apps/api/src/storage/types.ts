@@ -4,7 +4,7 @@ export type Role = 'socio' | 'administrador' | 'director';
 export type DocType = 'DNI' | 'PASAPORTE' | 'CUIL';
 export type ReservationStatus = 'confirmada' | 'en_curso' | 'finalizada' | 'cancelada' | 'no_show';
 export type PersonRole = 'titular' | 'acompanante';
-export type EquipmentType = 'computadora' | 'proyector';
+export type EquipmentType = 'computadora' | 'proyector' | 'pizarra';
 export type EquipmentStatus = 'disponible' | 'en_uso' | 'mantenimiento';
 export type AssignmentStatus = 'reservada' | 'entregada' | 'devuelta' | 'cancelada';
 export type AccessoryCode = 'funda' | 'cargador' | 'caja' | 'hdmi' | 'vga' | 'cable_energia';
@@ -192,6 +192,7 @@ export interface DbState {
 export const REQUIRED_ACCESSORIES: Record<EquipmentType, AccessoryCode[]> = {
   computadora: ['funda', 'cargador'],
   proyector: ['caja', 'hdmi', 'vga', 'cable_energia'],
+  pizarra: [],
 };
 
 export const ACCESSORY_LABELS: Record<AccessoryCode, string> = {

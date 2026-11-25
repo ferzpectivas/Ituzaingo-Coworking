@@ -129,7 +129,7 @@ export interface PublicOverview {
     Pick<Space, 'code' | 'name' | 'description' | 'color' | 'accent' | 'capacity' | 'furnitureCount' | 'bounds' | 'centroid' | 'number'>
   >;
   totals: Floorplan['totals'];
-  equipment: { computers: number; projectors: number };
+  equipment: { computers: number; projectors: number; whiteboards: number };
 }
 
 export interface ConfigResponse {
@@ -153,7 +153,7 @@ export interface OccupancyReservation {
   endsAt: string;
   status: string;
   notes?: string;
-  equipment: { computers: number; projectors: number };
+  equipment: { computers: number; projectors: number; whiteboards: number };
   isMine: boolean;
 }
 
@@ -217,7 +217,7 @@ export interface AvailabilitySpace {
 }
 
 export interface EquipmentAvailability {
-  type: 'computadora' | 'proyector';
+  type: 'computadora' | 'proyector' | 'pizarra';
   total: number;
   available: number;
   items: Array<{
@@ -251,7 +251,7 @@ export interface CreateReservationInput {
   slotId: string;
   partySize: number;
   people: PersonInput[];
-  equipment?: { computers?: number; projectors?: number };
+  equipment?: { computers?: number; projectors?: number; whiteboards?: number };
   notes?: string;
 }
 
@@ -259,7 +259,7 @@ export interface ReservationEquipment {
   assignmentId: string;
   itemId: string;
   assetTag: string;
-  type: 'computadora' | 'proyector';
+  type: 'computadora' | 'proyector' | 'pizarra';
   model?: string;
   serial?: string;
   status: 'reservada' | 'entregada' | 'devuelta' | 'cancelada';
@@ -412,6 +412,7 @@ export interface ReportSummary {
   equipment: {
     computers: number;
     projectors: number;
+    whiteboards: number;
     reservations: number;
     deliveries: number;
     returns: number;
@@ -451,7 +452,7 @@ export interface AuditResponse {
 export interface EquipmentItem {
   id: string;
   assetTag: string;
-  type: 'computadora' | 'proyector';
+  type: 'computadora' | 'proyector' | 'pizarra';
   model: string;
   serial: string;
   status: 'disponible' | 'en_uso' | 'mantenimiento';
@@ -466,6 +467,7 @@ export interface EquipmentInventory {
     total: number;
     computadoras: number;
     proyectores: number;
+    pizarras: number;
     disponibles: number;
     enUso: number;
     mantenimiento: number;
@@ -479,7 +481,7 @@ export interface EquipmentAssignment {
   reservationCode?: string;
   itemId: string;
   assetTag: string;
-  type: 'computadora' | 'proyector';
+  type: 'computadora' | 'proyector' | 'pizarra';
   model?: string;
   status: 'reservada' | 'entregada' | 'devuelta' | 'cancelada';
   date: string;

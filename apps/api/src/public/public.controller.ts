@@ -50,6 +50,7 @@ export class PublicController {
       equipment: {
         computers: state.gear.filter((g) => g.type === 'computadora').length,
         projectors: state.gear.filter((g) => g.type === 'proyector').length,
+        whiteboards: state.gear.filter((g) => g.type === 'pizarra').length,
       },
     };
   }

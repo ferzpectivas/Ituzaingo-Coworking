@@ -78,45 +78,61 @@ function allAccessories(): Record<AccessoryCode, boolean> {
 
 function buildGear(now: string): EquipmentItemRecord[] {
   const items: EquipmentItemRecord[] = [];
-  const computerModels = [
-    'Lenovo ThinkPad E14',
-    'Lenovo ThinkPad E14',
-    'Dell Latitude 3440',
-    'Dell Latitude 3440',
-    'HP ProBook 440',
-    'HP ProBook 440',
+
+  // REQ-03: inventario real del espacio: 2 notebooks y 1 proyector.
+  const notebooks = [
+    { assetTag: 'NB-001', model: 'Lenovo ThinkPad E14' },
+    { assetTag: 'NB-002', model: 'Dell Latitude 3440' },
   ];
-  computerModels.forEach((model, i) => {
-    const assetTag = `PC-${String(i + 1).padStart(3, '0')}`;
+  notebooks.forEach(({ assetTag, model }, i) => {
     items.push({
-      id: `eq_pc_${String(i + 1).padStart(3, '0')}`,
+      id: `eq_nb_${String(i + 1).padStart(3, '0')}`,
       assetTag,
       type: 'computadora',
       model,
       serial: `SN-${assetTag}-2025`,
       status: 'disponible',
       accessories: allAccessories(),
-      notes: 'Incluye funda y cargador. Checklist obligatorio en cada entrega.',
+      notes: 'Notebook con funda y cargador. Checklist obligatorio en cada entrega.',
       createdAt: now,
       updatedAt: now,
     });
   });
-  const projectors = ['Epson PowerLite X49', 'Epson PowerLite X49', 'ViewSonic PA503S'];
-  projectors.forEach((model, i) => {
-    const assetTag = `PJ-${String(i + 1).padStart(3, '0')}`;
-    items.push({
-      id: `eq_pj_${String(i + 1).padStart(3, '0')}`,
-      assetTag,
-      type: 'proyector',
-      model,
-      serial: `SN-${assetTag}-2025`,
-      status: i === 2 ? 'mantenimiento' : 'disponible',
-      accessories: allAccessories(),
-      notes: 'Incluye caja, HDMI, VGA y cable de energía.',
-      createdAt: now,
-      updatedAt: now,
-    });
+
+  items.push({
+    id: 'eq_pj_001',
+    assetTag: 'PJ-001',
+    type: 'proyector',
+    model: 'Epson PowerLite X49',
+    serial: 'SN-PJ-001-2025',
+    status: 'disponible',
+    accessories: allAccessories(),
+    notes: 'Incluye caja, HDMI, VGA y cable de energía.',
+    createdAt: now,
+    updatedAt: now,
   });
+
+  // REQ-03: pizarra desplazable reservable, sin accesorios obligatorios.
+  items.push({
+    id: 'eq_pz_001',
+    assetTag: 'PZ-001',
+    type: 'pizarra',
+    model: 'Pizarra desplazable 90 x 120 cm',
+    serial: 'SN-PZ-001-2025',
+    status: 'disponible',
+    accessories: {
+      funda: false,
+      cargador: false,
+      caja: false,
+      hdmi: false,
+      vga: false,
+      cable_energia: false,
+    },
+    notes: 'Pizarra desplazable para el Aula de Capacitaciones.',
+    createdAt: now,
+    updatedAt: now,
+  });
+
   return items;
 }
 

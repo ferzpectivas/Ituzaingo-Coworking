@@ -8,6 +8,7 @@ import {
   Laptop,
   MapPin,
   MonitorPlay,
+  Presentation,
   RotateCcw,
   ShieldAlert,
   Users,
@@ -274,8 +275,10 @@ export function ReservationDetailModal({
                           <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
                             {item.type === 'computadora' ? (
                               <Laptop size={14} className="text-teal" />
-                            ) : (
+                            ) : item.type === 'proyector' ? (
                               <MonitorPlay size={14} className="text-blue" />
+                            ) : (
+                              <Presentation size={14} className="text-amber" />
                             )}
                             {item.assetTag}
                             <span className="text-xs font-normal text-muted">{item.model}</span>

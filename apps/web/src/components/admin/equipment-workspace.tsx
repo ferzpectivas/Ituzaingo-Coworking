@@ -7,6 +7,7 @@ import {
   MonitorPlay,
   PackageCheck,
   Plus,
+  Presentation,
   RefreshCw,
   RotateCcw,
   Search,
@@ -28,8 +29,9 @@ import {
 } from '@/components/ui/primitives';
 
 const TYPE_LABEL: Record<string, string> = {
-  computadora: 'Computadora',
+  computadora: 'Notebook',
   proyector: 'Proyector',
+  pizarra: 'Pizarra',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -141,7 +143,7 @@ export function EquipmentWorkspace() {
       <SectionHeading
         eyebrow="Administración"
         title="Equipamiento"
-        description="Inventario de computadoras y proyectores, asignaciones por reserva y control de accesorios."
+        description="Inventario de notebooks, proyectores y pizarras, asignaciones por reserva y control de accesorios."
         actions={
           <>
             <button type="button" className="btn btn-outline btn-sm" onClick={() => void loadAll()}>
@@ -158,7 +160,7 @@ export function EquipmentWorkspace() {
         <Metric
           label="Equipos totales"
           value={inventory?.totals.total ?? 0}
-          hint={`${inventory?.totals.computadoras ?? 0} computadoras · ${inventory?.totals.proyectores ?? 0} proyectores`}
+          hint={`${inventory?.totals.computadoras ?? 0} notebooks · ${inventory?.totals.proyectores ?? 0} proyectores · ${inventory?.totals.pizarras ?? 0} pizarras`}
           tone="teal"
         />
         <Metric label="Disponibles" value={inventory?.totals.disponibles ?? 0} hint="Listos para asignar" />
@@ -206,8 +208,9 @@ export function EquipmentWorkspace() {
               aria-label="Filtrar por tipo"
             >
               <option value="">Todos los tipos</option>
-              <option value="computadora">Computadoras</option>
+              <option value="computadora">Notebooks</option>
               <option value="proyector">Proyectores</option>
+              <option value="pizarra">Pizarras</option>
             </select>
             <select
               className="select w-auto py-1.5 text-xs"
@@ -287,8 +290,10 @@ export function EquipmentWorkspace() {
                         <span className="inline-flex items-center gap-1.5 text-sm text-ink">
                           {item.type === 'computadora' ? (
                             <Laptop size={14} className="text-teal" />
-                          ) : (
+                          ) : item.type === 'proyector' ? (
                             <MonitorPlay size={14} className="text-blue" />
+                          ) : (
+                            <Presentation size={14} className="text-amber" />
                           )}
                           {TYPE_LABEL[item.type]}
                         </span>
@@ -368,8 +373,10 @@ export function EquipmentWorkspace() {
                     <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">
                       {assignment.type === 'computadora' ? (
                         <Laptop size={15} className="text-teal" />
-                      ) : (
+                      ) : assignment.type === 'proyector' ? (
                         <MonitorPlay size={15} className="text-blue" />
+                      ) : (
+                        <Presentation size={15} className="text-amber" />
                       )}
                       {assignment.assetTag}
                       <span className="font-normal text-muted">{assignment.model}</span>
@@ -487,7 +494,7 @@ function CreateEquipmentModal({
   onCreated: () => Promise<void> | void;
 }) {
   const { notify } = useToast();
-  const [type, setType] = useState<'computadora' | 'proyector'>('computadora');
+  const [type, setType] = useState<'computadora' | 'proyector' | 'pizarra'>('computadora');
   const [assetTag, setAssetTag] = useState('');
   const [model, setModel] = useState('');
   const [serial, setSerial] = useState('');
@@ -561,10 +568,13 @@ function CreateEquipmentModal({
             id="eq-type"
             className="select"
             value={type}
-            onChange={(event) => setType(event.target.value as 'computadora' | 'proyector')}
+            onChange={(event) =>
+              setType(event.target.value as 'computadora' | 'proyector' | 'pizarra')
+            }
           >
-            <option value="computadora">Computadora (funda y cargador)</option>
+            <option value="computadora">Notebook (funda y cargador)</option>
             <option value="proyector">Proyector (caja, HDMI, VGA y energía)</option>
+            <option value="pizarra">Pizarra desplazable (sin accesorios)</option>
           </select>
         </div>
         <div>

@@ -149,6 +149,7 @@ export class ReportsService {
     const equipment = {
       computers: equipmentItems.filter((g) => g.type === 'computadora').length,
       projectors: equipmentItems.filter((g) => g.type === 'proyector').length,
+      whiteboards: equipmentItems.filter((g) => g.type === 'pizarra').length,
       reservations: assignments.length,
       deliveries: assignments.filter((c) => c.delivery).length,
       returns: assignments.filter((c) => c.returned).length,
@@ -220,6 +221,7 @@ export class ReportsService {
           equipos: assignments.map((a) => a.assetTag).join(' '),
           computadoras: assignments.filter((a) => a.type === 'computadora').length,
           proyectores: assignments.filter((a) => a.type === 'proyector').length,
+          pizarras: assignments.filter((a) => a.type === 'pizarra').length,
           creada: r.createdAt,
           notas: r.notes ?? '',
         };
@@ -556,8 +558,9 @@ export class ReportsService {
     } else if (type === 'equipos') {
       header('Reporte de equipamiento', summary.range.label);
       section('Indicadores');
-      kpi('Computadoras', String(summary.equipment.computers));
+      kpi('Notebooks', String(summary.equipment.computers));
       kpi('Proyectores', String(summary.equipment.projectors));
+      kpi('Pizarras', String(summary.equipment.whiteboards));
       kpi('Entregas', String(summary.equipment.deliveries));
       kpi('Incidentes', String(summary.equipment.incidents));
       section('Asignaciones del período');
@@ -630,8 +633,9 @@ export class ReportsService {
           { label: 'Valor', width: 190 },
         ],
         [
-          ['Computadoras', String(summary.equipment.computers)],
+          ['Notebooks', String(summary.equipment.computers)],
           ['Proyectores', String(summary.equipment.projectors)],
+          ['Pizarras', String(summary.equipment.whiteboards)],
           ['Reservas de equipos', String(summary.equipment.reservations)],
           ['Entregas', String(summary.equipment.deliveries)],
           ['Devoluciones', String(summary.equipment.returns)],

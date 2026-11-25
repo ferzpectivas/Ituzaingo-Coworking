@@ -69,6 +69,13 @@ export class EquipmentRequestDto {
   @Min(0)
   @Max(5)
   projectors?: number;
+
+  @ApiPropertyOptional({ example: 0, default: 0, description: 'Pizarras desplazables' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1)
+  whiteboards?: number;
 }
 
 export class CreateReservationDto {
@@ -84,16 +91,16 @@ export class CreateReservationDto {
   @IsString()
   slotId!: string;
 
-  @ApiProperty({ example: 4, minimum: 1, maximum: 12 })
+  @ApiProperty({ example: 4, minimum: 1, maximum: 20 })
   @IsInt()
   @Min(1)
-  @Max(12)
+  @Max(20)
   partySize!: number;
 
   @ApiProperty({ type: [PersonInputDto] })
   @IsArray()
   @ArrayMinSize(1)
-  @ArrayMaxSize(12)
+  @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => PersonInputDto)
   people!: PersonInputDto[];
@@ -132,14 +139,14 @@ export class UpdateReservationDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(12)
+  @Max(20)
   partySize?: number;
 
   @ApiPropertyOptional({ type: [PersonInputDto] })
   @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
-  @ArrayMaxSize(12)
+  @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => PersonInputDto)
   people?: PersonInputDto[];

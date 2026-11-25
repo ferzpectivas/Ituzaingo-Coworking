@@ -238,7 +238,7 @@ export class ReservationsService {
     state: DbState,
     date: string,
     slotId: string,
-    counts: { computers: number; projectors: number },
+    counts: { computers: number; projectors: number; whiteboards: number },
     excludeReservationId?: string,
   ): EquipmentItemRecord[] {
     const used = this.equipmentBusyIds(state, date, slotId, excludeReservationId);
@@ -246,6 +246,7 @@ export class ReservationsService {
     const wants: Array<{ type: EquipmentType; count: number }> = [
       { type: 'computadora', count: counts.computers },
       { type: 'proyector', count: counts.projectors },
+      { type: 'pizarra', count: counts.whiteboards },
     ];
     for (const want of wants) {
       if (want.count <= 0) continue;
@@ -263,8 +264,10 @@ export class ReservationsService {
           code: 'EQUIPMENT_UNAVAILABLE',
           message:
             want.type === 'computadora'
-              ? 'No hay computadoras disponibles en esa franja.'
-              : 'No hay proyectores disponibles en esa franja.',
+              ? 'No hay notebooks disponibles en esa franja.'
+              : want.type === 'proyector'
+                ? 'No hay proyectores disponibles en esa franja.'
+                : 'No hay pizarras desplazables disponibles en esa franja.',
           meta: {
             type: want.type,
             requested: want.count,
@@ -503,6 +506,7 @@ export class ReservationsService {
         const items = this.allocateEquipment(state, date, slot.id, {
           computers: dto.equipment?.computers ?? 0,
           projectors: dto.equipment?.projectors ?? 0,
+          whiteboards: dto.equipment?.whiteboards ?? 0,
         });
 
         const reservation: ReservationRecord = {
@@ -657,6 +661,7 @@ export class ReservationsService {
             ? {
                 computers: dto.equipment.computers ?? 0,
                 projectors: dto.equipment.projectors ?? 0,
+                whiteboards: dto.equipment.whiteboards ?? 0,
               }
             : existingCounts;
           const items = this.allocateEquipment(state, date, slot.id, counts, reservation.id);
@@ -1009,7 +1014,7 @@ export class ReservationsService {
   private equipmentCounts(
     state: DbState,
     reservation: ReservationRecord,
-  ): { computers: number; projectors: number } {
+  ): { computers: number; projectors: number; whiteboards: number } {
     const active = state.checkouts.filter(
       (c) =>
         reservation.equipmentAssignmentIds.includes(c.id) &&
@@ -1018,6 +1023,7 @@ export class ReservationsService {
     return {
       computers: active.filter((c) => c.type === 'computadora').length,
       projectors: active.filter((c) => c.type === 'proyector').length,
+      whiteboards: active.filter((c) => c.type === 'pizarra').length,
     };
   }
 

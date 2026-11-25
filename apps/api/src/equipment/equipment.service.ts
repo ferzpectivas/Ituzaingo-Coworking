@@ -56,6 +56,7 @@ export class EquipmentService {
         total: items.length,
         computadoras: items.filter((i) => i.type === 'computadora').length,
         proyectores: items.filter((i) => i.type === 'proyector').length,
+        pizarras: items.filter((i) => i.type === 'pizarra').length,
         disponibles: items.filter((i) => i.status === 'disponible').length,
         enUso: items.filter((i) => i.status === 'en_uso').length,
         mantenimiento: items.filter((i) => i.status === 'mantenimiento').length,

@@ -8,6 +8,7 @@ import {
   Laptop,
   MapPinned,
   MonitorPlay,
+  Presentation,
   ShieldCheck,
   Sparkles,
   Users,
@@ -22,9 +23,9 @@ const floorplan = floorplanJson as unknown as Floorplan;
 const spaces = floorplan.spaces.filter((space) => space.bookable);
 
 const SPACE_FEATURES: Record<string, string[]> = {
-  coworking: ['Mesas de 6 puestos', 'Trabajo individual o en equipo', 'Enchufes y conectividad'],
-  salon: ['10 pupitres individuales', 'Capacitaciones y talleres', 'Pizarras y proyector'],
-  'sala-reuniones': ['Mesa ejecutiva para 8', 'Reuniones cerradas', 'Proyector y videollamada'],
+  coworking: ['20 puestos en mesas colaborativas', 'Trabajo individual o en equipo', 'Enchufes y conectividad'],
+  salon: ['15 pupitres individuales', 'Capacitaciones y talleres', 'Pizarra y proyector'],
+  'sala-reuniones': ['Mesa ejecutiva para 10', 'Reuniones cerradas', 'Proyector y videollamada'],
 };
 
 const steps = [
@@ -41,7 +42,7 @@ const steps = [
   {
     icon: Laptop,
     title: 'Pedí equipamiento',
-    text: 'Computadora con funda y cargador, o proyector con caja, HDMI, VGA y cable de energía.',
+    text: 'Notebook con funda y cargador, proyector con caja, HDMI, VGA y cable de energía, o pizarra desplazable.',
   },
 ];
 
@@ -52,7 +53,7 @@ const faqs = [
   },
   {
     q: '¿Cuántas personas puedo traer?',
-    a: 'Depende del ambiente: las mesas de Coworking admiten hasta 6 personas, el Aula tiene 10 pupitres individuales y la Sala de Reuniones se reserva completa para 8 personas.',
+    a: 'Depende del ambiente: el Coworking 1 tiene 20 puestos, el Aula de Capacitaciones 15 pupitres individuales y la Sala de Reuniones se reserva completa para 10 personas.',
   },
   {
     q: '¿Las franjas son de cuatro horas?',
@@ -64,7 +65,7 @@ const faqs = [
   },
   {
     q: '¿El equipamiento tiene costo?',
-    a: 'No. El servicio es gratuito. Al retirar la computadora se revisan la funda y el cargador; en el proyector, la caja, los cables HDMI, VGA y de energía.',
+    a: 'No. El servicio es gratuito. Al retirar la notebook se revisan la funda y el cargador; en el proyector, la caja, los cables HDMI, VGA y de energía. La pizarra desplazable se entrega sin accesorios.',
   },
 ];
 
@@ -326,13 +327,13 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <article className="card p-5">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-teal-soft text-teal">
                   <Laptop size={21} />
                 </span>
-                <h3 className="mt-4 font-serif text-xl text-ink">Computadoras</h3>
-                <p className="mt-1 text-sm text-muted">6 equipos disponibles para usar en el espacio.</p>
+                <h3 className="mt-4 font-serif text-xl text-ink">Notebooks</h3>
+                <p className="mt-1 text-sm text-muted">2 equipos disponibles para usar en el espacio.</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink/80">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-teal" /> Funda protectora
@@ -349,8 +350,8 @@ export default function HomePage() {
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-blue-soft text-blue">
                   <MonitorPlay size={21} />
                 </span>
-                <h3 className="mt-4 font-serif text-xl text-ink">Proyectores</h3>
-                <p className="mt-1 text-sm text-muted">3 equipos, ideal para el Aula y la Sala de Reuniones.</p>
+                <h3 className="mt-4 font-serif text-xl text-ink">Proyector</h3>
+                <p className="mt-1 text-sm text-muted">1 equipo, ideal para el Aula y la Sala de Reuniones.</p>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink/80">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-blue" /> Caja de transporte
@@ -360,6 +361,24 @@ export default function HomePage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={14} className="text-blue" /> Cable de energía
+                  </li>
+                </ul>
+              </article>
+              <article className="card p-5">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-gold-soft text-amber">
+                  <Presentation size={21} />
+                </span>
+                <h3 className="mt-4 font-serif text-xl text-ink">Pizarra desplazable</h3>
+                <p className="mt-1 text-sm text-muted">1 pizarra para el Aula de Capacitaciones.</p>
+                <ul className="mt-3 space-y-1.5 text-sm text-ink/80">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-amber" /> Se traslada a cualquier ambiente
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-amber" /> Sin accesorios obligatorios
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-amber" /> Checklist de entrega y devolución
                   </li>
                 </ul>
               </article>

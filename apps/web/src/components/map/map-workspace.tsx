@@ -381,6 +381,9 @@ export function MapWorkspace({ floorplan }: { floorplan: Floorplan }) {
                     {reservation.equipment.projectors
                       ? ` · ${reservation.equipment.projectors} proyector`
                       : ''}
+                    {reservation.equipment.whiteboards
+                      ? ` · ${reservation.equipment.whiteboards} pizarra`
+                      : ''}
                   </p>
                 </div>
                 <StatusBadge status={reservation.status} />
@@ -412,7 +415,7 @@ export function MapWorkspace({ floorplan }: { floorplan: Floorplan }) {
             <Laptop size={14} className="text-teal" /> Equipamiento con checklist
           </p>
           <p className="mt-1 text-[0.7rem] leading-relaxed text-muted">
-            Computadoras con funda y cargador; proyectores con caja, HDMI, VGA y energía.
+            Notebooks con funda y cargador; proyectores con caja, HDMI, VGA y energía; pizarra desplazable sin accesorios.
           </p>
         </div>
       </div>

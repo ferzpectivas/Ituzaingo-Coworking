@@ -84,9 +84,9 @@ export class UpdateEquipmentDto {
 }
 
 export class CreateEquipmentDto {
-  @ApiProperty({ enum: ['computadora', 'proyector'] })
-  @IsIn(['computadora', 'proyector'])
-  type!: 'computadora' | 'proyector';
+  @ApiProperty({ enum: ['computadora', 'proyector', 'pizarra'] })
+  @IsIn(['computadora', 'proyector', 'pizarra'])
+  type!: 'computadora' | 'proyector' | 'pizarra';
 
   @ApiProperty({ example: 'PC-007' })
   @IsString()
@@ -111,9 +111,9 @@ export class CreateEquipmentDto {
 }
 
 export class ListEquipmentQuery {
-  @ApiPropertyOptional({ enum: ['computadora', 'proyector'] })
+  @ApiPropertyOptional({ enum: ['computadora', 'proyector', 'pizarra'] })
   @IsOptional()
-  @IsEnum({ computadora: 'computadora', proyector: 'proyector' })
+  @IsEnum({ computadora: 'computadora', proyector: 'proyector', pizarra: 'pizarra' })
   type?: string;
 
   @ApiPropertyOptional()

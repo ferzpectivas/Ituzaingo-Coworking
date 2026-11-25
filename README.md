@@ -50,14 +50,16 @@ Flujo de reserva en tres pasos: **(1)** espacio, fecha, franja y cantidad de per
 **(2)** identificación de personas (titular + acompañantes con tipo y número de
 documento); **(3)** equipamiento opcional con su accesorio obligatorio.
 
-- Computadora → funda y cargador.
+- Notebook → funda y cargador.
 - Proyector → caja, cable HDMI, cable VGA y cable de energía.
-- La **Sala de Reuniones** se reserva completa: exige los 8 asientos libres y fija
-  automáticamente 8 personas.
+- Pizarra desplazable → sin accesorios obligatorios.
+- La **Sala de Reuniones** se reserva completa: exige los 10 asientos libres y fija
+  automáticamente 10 personas.
 - Franjas: `manana` 09–13, `tarde` 14–18, `noche` 18–22 (America/Argentina/Buenos_Aires).
 
-Capacidad total: **36 puestos** — Coworking 18 (3 mesas × 6), Aula 10 pupitres,
-Sala de Reuniones 8.
+Capacidad total: **45 puestos** — Coworking 1 con 20 (3 mesas), Aula de
+Capacitaciones con 15 pupitres y Sala de Reuniones con 10. Inventario inicial:
+2 notebooks, 1 proyector y 1 pizarra desplazable.
 
 ---
 
@@ -313,7 +315,7 @@ El mapa deriva de `mapa.drawio.svg`, procesado por
 
 - Escala: 1 unidad SVG = 0,025 m; el origen y los límites se calculan desde la
   geometría del plano (11,2 m × 9,0 m).
-- Se detectan 3 ambientes, 14 muebles, 36 asientos, 21 volúmenes de muro y
+- Se detectan 3 ambientes, 19 muebles, 45 asientos, 21 volúmenes de muro y
   5 aberturas (3 puertas y el ventanal del frente sur).
 - Pupitres rojos → puestos individuales; mesas marrones → mesas grupales.
 - El perímetro se ajusta a los rectángulos de los ambientes con una tolerancia

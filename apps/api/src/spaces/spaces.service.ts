@@ -195,6 +195,7 @@ export class SpacesService {
       equipment: {
         computers: activeAssignments.filter((c) => c.type === 'computadora').length,
         projectors: activeAssignments.filter((c) => c.type === 'proyector').length,
+        whiteboards: activeAssignments.filter((c) => c.type === 'pizarra').length,
       },
       isMine: reservation.holderUserId === user.userId,
     };
@@ -261,7 +262,7 @@ export class SpacesService {
         c.slotId === slot.id &&
         (c.status === 'reservada' || c.status === 'entregada'),
     );
-    const equipment = (['computadora', 'proyector'] as EquipmentType[]).map((type) => {
+    const equipment = (['computadora', 'proyector', 'pizarra'] as EquipmentType[]).map((type) => {
       const items = state.gear.filter((g) => g.type === type && g.status !== 'mantenimiento');
       const used = new Set(
         activeAssignments.filter((a) => a.type === type).map((a) => a.itemId),

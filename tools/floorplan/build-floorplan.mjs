@@ -414,8 +414,8 @@ const coworkingBoundsSvg = {
 const spaceDefs = [
   {
     code: 'coworking',
-    name: 'Coworking',
-    description: 'Mesas colaborativas para trabajo individual o en equipo.',
+    name: 'Coworking 1',
+    description: 'Sala compartida con mesas colaborativas para trabajo individual o en equipo.',
     color: '#12595A',
     accent: '#E6F2F0',
     boundsSvg: coworkingBoundsSvg,
@@ -423,8 +423,8 @@ const spaceDefs = [
   },
   {
     code: 'salon',
-    name: 'Aula',
-    description: 'Pupitres individuales para capacitaciones y jornadas de trabajo.',
+    name: 'Aula de Capacitaciones',
+    description: 'Aula con pizarra y pupitres individuales para capacitaciones y jornadas.',
     color: '#C9A66B',
     accent: '#F6EFE3',
     boundsSvg: { x: aulaRect.x, y: aulaRect.y, w: aulaRect.w, h: aulaRect.h },
@@ -510,7 +510,12 @@ function buildSeats(furniture) {
   }
 
   const halfWidth = width / 2;
-  const offsets = [-1, 0, 1];
+  // REQ-03: la sala de reuniones admite 10 personas y el Coworking 1 llega a
+  // 20. La mesa ejecutiva lleva cuatro sillas por lado; la última mesa del
+  // Coworking también, para sumar los 20 puestos del relevamiento.
+  const fourPerSide =
+    furniture.kind === 'mesa_ejecutiva' || (furniture.kind === 'mesa' && furniture.code === 'CW-M3');
+  const offsets = fourPerSide ? [-1.5, -0.5, 0.5, 1.5] : [-1, 0, 1];
   for (const dz of offsets) push(x - (halfWidth + CHAIR_GAP), z + dz, 90);
   for (const dz of offsets) push(x + (halfWidth + CHAIR_GAP), z + dz, -90);
 
@@ -573,6 +578,35 @@ desks.forEach((r, i) => {
   furniture.push(unit);
 });
 
+// REQ-03: el relevamiento indica 15 pupitres en el Aula de Capacitaciones,
+// mientras que el plano de referencia dibuja 10. Se completa una tercera
+// columna con cinco pupitres más hasta alcanzar la capacidad real. El SVG
+// fuente queda pendiente de actualización; el manifiesto es la fuente de la UI.
+if (desks.length !== 10) {
+  throw new Error(`Se esperaban 10 pupitres dibujados, se encontraron ${desks.length}.`);
+}
+const extraDeskBaseX = round(nx(desks[0].cx) - 1);
+const deskRows = [...new Set(desks.map((r) => nz(r.cy)))].sort((a, b) => a - b);
+deskRows.forEach((deskZ, index) => {
+  const number = desks.length + index + 1;
+  const code = `SA-D${String(number).padStart(2, '0')}`;
+  const unit = {
+    code,
+    label: `D${String(number).padStart(2, '0')}`,
+    spaceCode: 'salon',
+    kind: 'pupitre',
+    capacity: 1,
+    position: { x: extraDeskBaseX, z: deskZ },
+    size: { width: round(30 * SCALE), depth: round(20 * SCALE) },
+    rotation: 0,
+    longAxis: 'x',
+    svgRef: `desk-extra-${index + 1}`,
+    seats: [],
+  };
+  unit.seats = buildSeats(unit);
+  furniture.push(unit);
+});
+
 furniture.sort((a, b) => {
   const order = { coworking: 0, salon: 1, 'sala-reuniones': 2 };
   const d = (order[a.spaceCode] ?? 9) - (order[b.spaceCode] ?? 9);
@@ -588,8 +622,30 @@ for (const space of spaces) {
 }
 
 const totalSeats = furniture.reduce((acc, f) => acc + f.capacity, 0);
-if (totalSeats !== 36) {
-  throw new Error(`Capacidad inesperada: ${totalSeats} asientos (se esperaban 36).`);
+if (totalSeats !== 45) {
+  throw new Error(`Capacidad inesperada: ${totalSeats} asientos (se esperaban 45).`);
+}
+
+// REQ-03: capacidades del relevamiento y todos los asientos dentro de su
+// ambiente, para detectar ajustes de layout inválidos al regenerar el plano.
+const expectedCapacity = { coworking: 20, salon: 15, 'sala-reuniones': 10 };
+for (const space of spaces.filter((s) => s.bookable)) {
+  if (space.capacity !== expectedCapacity[space.code]) {
+    throw new Error(
+      `Capacidad inesperada en ${space.code}: ${space.capacity} (se esperaban ${expectedCapacity[space.code]}).`,
+    );
+  }
+  const { x, z, width, depth } = space.bounds;
+  for (const unit of furniture.filter((f) => f.spaceCode === space.code)) {
+    for (const seat of unit.seats) {
+      const out =
+        seat.position.x < x - 0.01 ||
+        seat.position.x > x + width + 0.01 ||
+        seat.position.z < z - 0.01 ||
+        seat.position.z > z + depth + 0.01;
+      if (out) throw new Error(`El asiento ${seat.id} queda fuera de ${space.code}.`);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

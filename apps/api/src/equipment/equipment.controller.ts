@@ -20,7 +20,7 @@ export class EquipmentController {
 
   @Get()
   @Roles('administrador', 'director')
-  @ApiOperation({ summary: 'Inventario de computadoras y proyectores' })
+  @ApiOperation({ summary: 'Inventario de notebooks, proyectores y pizarras' })
   inventory(
     @Query('type') type?: string,
     @Query('status') status?: string,

@@ -11,6 +11,7 @@ import {
   Gauge,
   Laptop,
   MonitorPlay,
+  Presentation,
   RefreshCw,
   TrendingUp,
   Users,
@@ -412,7 +413,7 @@ export function DirectorDashboard() {
               </p>
               <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-lg bg-teal-soft/60 px-3 py-2">
-                  <dt className="text-[0.62rem] uppercase tracking-wide text-teal">Computadoras</dt>
+                  <dt className="text-[0.62rem] uppercase tracking-wide text-teal">Notebooks</dt>
                   <dd className="font-serif text-xl text-ink">{summary.equipment.computers}</dd>
                 </div>
                 <div className="rounded-lg bg-blue-soft/60 px-3 py-2">
@@ -420,6 +421,12 @@ export function DirectorDashboard() {
                     <MonitorPlay size={10} /> Proyectores
                   </dt>
                   <dd className="font-serif text-xl text-ink">{summary.equipment.projectors}</dd>
+                </div>
+                <div className="rounded-lg bg-gold-soft/60 px-3 py-2">
+                  <dt className="flex items-center gap-1 text-[0.62rem] uppercase tracking-wide text-amber">
+                    <Presentation size={10} /> Pizarras
+                  </dt>
+                  <dd className="font-serif text-xl text-ink">{summary.equipment.whiteboards}</dd>
                 </div>
                 <div className="rounded-lg bg-[#f7f8f6] px-3 py-2">
                   <dt className="text-[0.62rem] uppercase tracking-wide text-muted">Entregas</dt>

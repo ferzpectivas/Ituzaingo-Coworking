@@ -12,6 +12,7 @@ import {
   Minus,
   MonitorPlay,
   Plus,
+  Presentation,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -87,6 +88,7 @@ export function ReservationWizard({
   const [people, setPeople] = useState<FormPerson[]>([emptyPerson('titular')]);
   const [computers, setComputers] = useState(0);
   const [projectors, setProjectors] = useState(0);
+  const [whiteboards, setWhiteboards] = useState(0);
   const [notes, setNotes] = useState('');
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
@@ -117,6 +119,7 @@ export function ReservationWizard({
     ]);
     setComputers(0);
     setProjectors(0);
+    setWhiteboards(0);
     setNotes('');
     setErrors({});
     setSubmitError(null);
@@ -179,7 +182,7 @@ export function ReservationWizard({
   );
 
   const maxParty = useMemo(() => {
-    if (!selectedSpace) return 12;
+    if (!selectedSpace) return 20;
     if (selectedSpace.code === 'sala-reuniones') {
       return selectedSpace.occupiedSeats > 0 ? 0 : selectedSpace.capacity;
     }
@@ -201,11 +204,13 @@ export function ReservationWizard({
 
   const computersMax = Math.min(equipmentAvailability.get('computadora')?.available ?? 0, Math.max(0, partySize));
   const projectorsMax = equipmentAvailability.get('proyector')?.available ?? 0;
+  const whiteboardsMax = equipmentAvailability.get('pizarra')?.available ?? 0;
 
   useEffect(() => {
     if (computers > computersMax) setComputers(computersMax);
     if (projectors > projectorsMax) setProjectors(projectorsMax);
-  }, [computers, projectors, computersMax, projectorsMax]);
+    if (whiteboards > whiteboardsMax) setWhiteboards(whiteboardsMax);
+  }, [computers, projectors, whiteboards, computersMax, projectorsMax, whiteboardsMax]);
 
   const slotEnded = (slotStart: string, slotEnd: string): boolean => {
     if (date !== today) return false;
@@ -296,7 +301,7 @@ export function ReservationWizard({
             : (person.docNumber ?? '').trim(),
         role: index === 0 ? 'titular' : 'acompanante',
       })),
-      equipment: { computers, projectors },
+      equipment: { computers, projectors, whiteboards },
       notes: notes.trim() || undefined,
     };
     try {
@@ -739,7 +744,7 @@ export function ReservationWizard({
                 );
               })}
 
-              {people.length < 12 ? (
+              {people.length < 20 ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -774,61 +779,85 @@ export function ReservationWizard({
                 </p>
               </div>
 
-              {(['computadora', 'proyector'] as const).map((type) => {
-                const info = equipmentAvailability.get(type);
-                const value = type === 'computadora' ? computers : projectors;
-                const max = type === 'computadora' ? computersMax : projectorsMax;
-                const setValue = type === 'computadora' ? setComputers : setProjectors;
+              {[
+                {
+                  type: 'computadora' as const,
+                  label: 'Notebook',
+                  plural: 'notebooks',
+                  note: 'funda y cargador',
+                  icon: Laptop,
+                  tone: 'bg-teal-soft text-teal',
+                  value: computers,
+                  max: computersMax,
+                  setValue: setComputers,
+                },
+                {
+                  type: 'proyector' as const,
+                  label: 'Proyector',
+                  plural: 'proyectores',
+                  note: 'caja, HDMI, VGA y energía',
+                  icon: MonitorPlay,
+                  tone: 'bg-blue-soft text-blue',
+                  value: projectors,
+                  max: projectorsMax,
+                  setValue: setProjectors,
+                },
+                {
+                  type: 'pizarra' as const,
+                  label: 'Pizarra desplazable',
+                  plural: 'pizarras',
+                  note: 'sin accesorios obligatorios',
+                  icon: Presentation,
+                  tone: 'bg-gold-soft text-amber',
+                  value: whiteboards,
+                  max: whiteboardsMax,
+                  setValue: setWhiteboards,
+                },
+              ].map((item) => {
+                const info = equipmentAvailability.get(item.type);
+                const Icon = item.icon;
                 const available = info?.available ?? 0;
                 return (
-                  <div key={type} className="rounded-xl border border-line bg-white p-3.5">
+                  <div key={item.type} className="rounded-xl border border-line bg-white p-3.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-start gap-2.5">
-                        <span
-                          className={`grid h-9 w-9 place-items-center rounded-lg ${
-                            type === 'computadora' ? 'bg-teal-soft text-teal' : 'bg-blue-soft text-blue'
-                          }`}
-                        >
-                          {type === 'computadora' ? <Laptop size={17} /> : <MonitorPlay size={17} />}
+                        <span className={`grid h-9 w-9 place-items-center rounded-lg ${item.tone}`}>
+                          <Icon size={17} />
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-ink">
-                            {type === 'computadora' ? 'Computadora' : 'Proyector'}
-                          </p>
+                          <p className="text-sm font-semibold text-ink">{item.label}</p>
                           <p className="text-[0.7rem] text-muted">
-                            {available} de {info?.total ?? 0} disponibles
-                            {type === 'computadora' ? ' · funda y cargador' : ' · caja, HDMI, VGA y energía'}
+                            {available} de {info?.total ?? 0} disponibles · {item.note}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setValue(Math.max(0, value - 1))}
-                          disabled={value <= 0}
+                          onClick={() => item.setValue(Math.max(0, item.value - 1))}
+                          disabled={item.value <= 0}
                           className="grid h-8 w-8 place-items-center rounded-full border border-line bg-white text-muted hover:border-teal/40 disabled:opacity-40"
-                          aria-label={`Quitar ${type}`}
+                          aria-label={`Quitar ${item.label}`}
                         >
                           <Minus size={14} />
                         </button>
                         <span className="w-6 text-center font-serif text-lg text-ink" aria-live="polite">
-                          {value}
+                          {item.value}
                         </span>
                         <button
                           type="button"
-                          onClick={() => setValue(Math.min(max, value + 1))}
-                          disabled={value >= max}
+                          onClick={() => item.setValue(Math.min(item.max, item.value + 1))}
+                          disabled={item.value >= item.max}
                           className="grid h-8 w-8 place-items-center rounded-full border border-line bg-white text-muted hover:border-teal/40 disabled:opacity-40"
-                          aria-label={`Agregar ${type}`}
+                          aria-label={`Agregar ${item.label}`}
                         >
                           <Plus size={14} />
                         </button>
                       </div>
                     </div>
-                    {max === 0 ? (
+                    {item.max === 0 ? (
                       <p className="mt-2 rounded-lg bg-amber-soft px-2.5 py-1.5 text-[0.68rem] text-amber">
-                        No hay {type === 'computadora' ? 'computadoras' : 'proyectores'} disponibles en
-                        esta franja.
+                        No hay {item.plural} disponibles en esta franja.
                       </p>
                     ) : null}
                   </div>
@@ -871,7 +900,11 @@ export function ReservationWizard({
                   <div className="flex justify-between gap-3 sm:block">
                     <dt className="text-muted">Equipamiento</dt>
                     <dd className="font-semibold text-ink">
-                      {[computers ? `${computers} PC` : '', projectors ? `${projectors} proyector` : '']
+                      {[
+                        computers ? `${computers} notebook${computers === 1 ? '' : 's'}` : '',
+                        projectors ? `${projectors} proyector${projectors === 1 ? '' : 'es'}` : '',
+                        whiteboards ? `${whiteboards} pizarra${whiteboards === 1 ? '' : 's'}` : '',
+                      ]
                         .filter(Boolean)
                         .join(' · ') || 'Sin equipamiento'}
                     </dd>
