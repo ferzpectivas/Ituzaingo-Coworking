@@ -42,6 +42,11 @@ equipamiento al relevamiento y decidir la salida de Docker.
 | BUG-02 · Login devuelve 500 con el proxy nginx | P1 | Hecho |
 | TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
 | TEC-04 · Configurar nginx local para desarrollo | P2 | Hecho |
+| BUG-02 · Login devuelve 500 con el proxy nginx | P1 | Hecho |
+| BUG-03 · Login devuelve 404 en Render | P1 | En revisión |
+| TEC-03 · ADR de despliegue sin Docker | P2 | En revisión |
+| TEC-04 · Configurar nginx local para desarrollo | P2 | Hecho |
+| REQ-02 · Horario de lunes a viernes 08:00 a 18:00 | P2 | En curso |
 | REQ-03 · Adecuar espacios y equipamiento al relevamiento | P2 | Hecho |
 
 - **Fuera de alcance:** implementación de REQ-01.

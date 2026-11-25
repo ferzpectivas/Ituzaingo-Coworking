@@ -55,7 +55,8 @@ documento); **(3)** equipamiento opcional con su accesorio obligatorio.
 - Pizarra desplazable → sin accesorios obligatorios.
 - La **Sala de Reuniones** se reserva completa: exige los 10 asientos libres y fija
   automáticamente 10 personas.
-- Franjas: `manana` 09–13, `tarde` 14–18, `noche` 18–22 (America/Argentina/Buenos_Aires).
+- Horario: lunes a viernes de 08:00 a 18:00. Franjas: `manana` 08–11,
+  `mediodia` 11–15 y `tarde` 15–18 (America/Argentina/Buenos_Aires).
 
 Capacidad total: **45 puestos** — Coworking 1 con 20 (3 mesas), Aula de
 Capacitaciones con 15 pupitres y Sala de Reuniones con 10. Inventario inicial:
@@ -154,6 +155,7 @@ publicar el sitio, y luego poner `SEED_ON_START=false`.
 | `API_PORT` | Puerto interno de la API | `4000` |
 | `WEB_ORIGIN` | Origen permitido para CORS (admite lista separada por comas) | `https://coworking.ituzaingo.gob.ar` |
 | `NEXT_PUBLIC_API_URL` | URL de la API que usa el navegador | `/api/v1` detrás de Caddy |
+| `API_ORIGIN` | Origen de la API para el rewrite de Next (sólo Render/PaaS) | `https://ituzaingo-coworking-api.onrender.com` |
 | `JWT_SECRET` | Clave de firma de los JWT (obligatoria en producción) | 48 bytes aleatorios |
 | `PERSONAL_DATA_KEY` | Clave AES-256-GCM para documentos personales | aleatoria y estable |
 | `COOKIE_SECURE` | Cookies sólo por HTTPS | `true` en producción |
@@ -228,6 +230,58 @@ git pull            # o copiar la nueva versión
 docker compose build
 docker compose up -d
 ```
+
+---
+
+## Despliegue en Render
+
+Render publica la web y la API como dos servicios separados y no hay un proxy
+delante: sin más, `/api/*` lo resuelve Next.js y el login devuelve 404. La
+solución es un rewrite de `next.config.ts` activado con la variable
+`API_ORIGIN`:
+
+```
+Internet → https://ituzaingo-coworking.onrender.com   (Next.js)
+              └── /api/*  →  rewrite  →  https://ituzaingo-coworking-api.onrender.com  (NestJS)
+```
+
+Pasos:
+
+1. Crear el servicio de API desde el Blueprint del repositorio
+   (`render.yaml`): **New → Blueprint** y elegir el repositorio. Al sincronizar,
+   completar `JWT_SECRET` y `PERSONAL_DATA_KEY` (son `sync: false`). Usar la
+   misma región que el servicio web.
+2. En el servicio **web**, agregar
+   `API_ORIGIN=https://ituzaingo-coworking-api.onrender.com` y verificar que
+   `NEXT_PUBLIC_API_URL=/api/v1` esté definida.
+3. Redeployar la web. Next 16 hornea los rewrites en `routes-manifest.json` al
+   compilar: si `API_ORIGIN` se agregó después del último build, hay que hacer
+   **Clear build cache & deploy** para que el rewrite exista.
+
+Verificación:
+
+```bash
+curl -fsS https://ituzaingo-coworking.onrender.com/api/v1/health
+# 200 con JSON de la API (no el 404 HTML de Next)
+
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+  https://ituzaingo-coworking.onrender.com/api/v1/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"email":"socio@coworking.gob.ar","password":"Socio1234!"}'
+# 201 con Set-Cookie; un 404 indica que falta API_ORIGIN o no hubo rebuild
+```
+
+Notas:
+
+- La API escucha en `PORT` (lo inyecta Render); `API_PORT` sigue teniendo
+  prioridad en Docker Compose y en el desarrollo local.
+- El disco de Render es efímero: con `SEED_ON_START=true` los datos demo se
+  regeneran en cada arranque o redeploy. Para conservar datos reales hace falta
+  un disco persistente (plan pago) o el despliegue en VPS de REQ-01.
+- La API queda expuesta públicamente, pero todas las rutas de negocio exigen
+  sesión (cookies del dominio de la web) y CORS sólo acepta `WEB_ORIGIN`.
+- En el plan gratuito los servicios se duermen con la inactividad: el primer
+  request tarda unos segundos.
 
 ---
 

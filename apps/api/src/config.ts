@@ -40,7 +40,9 @@ try {
 
 export const appConfig = {
   root,
-  port: Number(process.env.API_PORT ?? 4000),
+  // PORT la inyecta Render (u otro PaaS) y debe respetarse; API_PORT sigue
+  // teniendo prioridad para Docker Compose y el desarrollo local.
+  port: Number(process.env.API_PORT ?? process.env.PORT ?? 4000),
   webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
   jwtSecret:
     process.env.JWT_SECRET ?? 'ituzaingo-coworking-dev-secret-change-in-production-2026',

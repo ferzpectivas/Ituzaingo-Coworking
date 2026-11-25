@@ -316,9 +316,13 @@ export function DirectorDashboard() {
                       <div key={day.date} className="group flex min-w-[12px] flex-1 flex-col items-center gap-1">
                         <div className="relative flex h-32 w-full items-end">
                           <div
-                            className="w-full rounded-t bg-teal/80 transition group-hover:bg-teal"
-                            style={{ height: `${Math.max(height, day.people > 0 ? 4 : 1)}%` }}
-                            title={`${formatDate(day.date)}: ${day.people} personas · ${day.reservations} reservas`}
+                            className={`w-full rounded-t transition ${day.open ? 'bg-teal/80 group-hover:bg-teal' : 'bg-line'}`}
+                            style={{ height: `${day.open ? Math.max(height, day.people > 0 ? 4 : 1) : 2}%` }}
+                            title={
+                              day.open
+                                ? `${formatDate(day.date)}: ${day.people} personas · ${day.reservations} reservas`
+                                : `${formatDate(day.date)}: cerrado`
+                            }
                           />
                         </div>
                         <span className="rotate-0 text-[0.55rem] text-muted">

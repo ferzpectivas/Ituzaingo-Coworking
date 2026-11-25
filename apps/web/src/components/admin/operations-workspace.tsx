@@ -68,7 +68,7 @@ export function OperationsWorkspace({ floorplan }: { floorplan: Floorplan }) {
     api<ConfigResponse>('/config')
       .then((result) => {
         setConfig(result);
-        setDate(result.today);
+        setDate(result.todayOpen ? result.today : result.nextOpenDate);
         setSlotId(result.currentSlotId);
       })
       .catch(() => setError('No se pudo cargar la configuración del espacio.'));
@@ -234,6 +234,11 @@ export function OperationsWorkspace({ floorplan }: { floorplan: Floorplan }) {
         </div>
 
         <div className="mt-3">
+          {occupancy?.closed ? (
+            <p className="mb-3 rounded-xl bg-amber-soft/60 px-3 py-2 text-xs text-ink">
+              Espacio cerrado: el horario es de lunes a viernes de 08:00 a 18:00.
+            </p>
+          ) : null}
           <MapView
             floorplan={floorplan}
             occupancy={occupancy}

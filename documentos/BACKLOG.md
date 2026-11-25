@@ -54,7 +54,9 @@ justificación).
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | Hecho | 1 | [ficha](items/BUG-01.md) |
 | BUG-02 | Login devuelve 500 con el proxy nginx | bug | infra | P1 | S | Hecho | 1 | [ficha](items/BUG-02.md) |
+| BUG-03 | Login devuelve 404 en Render | bug | infra | P1 | S | En revisión | 1 | [ficha](items/BUG-03.md) |
 | REQ-01 | Quitar Docker del despliegue | req | infra | P2 | L | Refinado | 2 | [ficha](items/REQ-01.md) |
+| REQ-02 | Horario de lunes a viernes 08:00 a 18:00 | req | api / web | P2 | M | En curso | 1 | [ficha](items/REQ-02.md) |
 | REQ-03 | Adecuar espacios y equipamiento al relevamiento | req | web | P2 | L | Hecho | 1 | [ficha](items/REQ-03.md) |
 | TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | Hecho | 0 | — |
 | TEC-02 | Actualizar README tras quitar Docker | tec | docs | P3 | S | Nuevo | 3 | — |
@@ -85,7 +87,11 @@ una vez cerrado REQ-01.
 
 ## En curso
 
-Sin ítems.
+### REQ-02 · Horario de lunes a viernes 08:00 a 18:00
+
+Tres franjas (08–11, 11–15 y 15–18), cierre de fines de semana para todos los
+roles y migración automática de la configuración existente. Detalle en
+[`items/REQ-02.md`](items/REQ-02.md).
 
 ## En revisión
 

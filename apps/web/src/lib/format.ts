@@ -72,6 +72,25 @@ export function addDaysISO(date: string, days: number): string {
   }).format(base);
 }
 
+export const DEFAULT_OPENING_DAYS = [1, 2, 3, 4, 5];
+
+export function isOpenDate(date: string, openingDays: number[] = DEFAULT_OPENING_DAYS): boolean {
+  const day = new Date(`${date}T12:00:00-03:00`).getUTCDay();
+  return openingDays.includes(day);
+}
+
+export function nextOpenDateISO(
+  date: string,
+  openingDays: number[] = DEFAULT_OPENING_DAYS,
+): string {
+  let current = date;
+  for (let i = 0; i < 14; i += 1) {
+    if (isOpenDate(current, openingDays)) return current;
+    current = addDaysISO(current, 1);
+  }
+  return date;
+}
+
 export function percent(value: number, digits = 1): string {
   return `${(value * 100).toFixed(digits)}%`;
 }

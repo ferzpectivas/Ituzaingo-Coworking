@@ -27,6 +27,7 @@ export class PublicController {
       timezone: state.settings.timezone,
       today: todayISO(),
       slots: state.settings.slots,
+      openingDays: state.settings.openingDays,
       policies: {
         maxAdvanceDays: state.settings.maxAdvanceDays,
         cancellationHours: state.settings.cancellationHours,
