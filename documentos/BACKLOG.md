@@ -54,6 +54,7 @@ justificación).
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | BUG-01 | No se puede escribir el documento del acompañante | bug | web | P1 | M | Hecho | 1 | [ficha](items/BUG-01.md) |
 | BUG-02 | Login devuelve 500 con el proxy nginx | bug | infra | P1 | S | Hecho | 1 | [ficha](items/BUG-02.md) |
+| BUG-03 | Login devuelve 404 en Render | bug | infra | P1 | S | En revisión | 1 | [ficha](items/BUG-03.md) |
 | REQ-01 | Quitar Docker del despliegue | req | infra | P2 | L | Refinado | 2 | [ficha](items/REQ-01.md) |
 | REQ-02 | Horario de lunes a viernes 08:00 a 18:00 | req | api / web | P2 | M | En curso | 1 | [ficha](items/REQ-02.md) |
 | TEC-01 | Ignorar `apps/api/data/` y revisar `package-lock.json` | tec | infra | P2 | S | Hecho | 0 | — |

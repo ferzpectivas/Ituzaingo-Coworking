@@ -1,0 +1,43 @@
+# Blueprint de Render: API del Espacio de Coworking de Ituzaingó.
+#
+# La web ya existe en el Dashboard como servicio separado
+# (https://ituzaingo-coworking.onrender.com) y no se declara acá para no
+# modificar un servicio que ya funciona. Después de sincronizar este
+# Blueprint hay que agregarle la variable API_ORIGIN (ver README).
+#
+# La API corre con el runtime nativo de Render (no Docker): el Blueprint no
+# permite elegir el stage del Dockerfile multietapa del repositorio.
+services:
+  - type: web
+    name: ituzaingo-coworking-api
+    runtime: node
+    plan: free
+    # Usá la misma región que el servicio web para que el tráfico web → API
+    # no cruce regiones (oregon es la predeterminada de Render).
+    # region: oregon
+    # --include=dev: Render define NODE_ENV=production y sin esto npm omite
+    # los devDependencies, donde vive @nestjs/cli (nest build).
+    buildCommand: npm ci --include=dev && npm run floorplan && npm run build -w @ituzaingo/api
+    startCommand: npm run start -w @ituzaingo/api
+    healthCheckPath: /api/v1/health
+    envVars:
+      # Origen público exacto de la web, sin barra final (CORS y cookies).
+      - key: WEB_ORIGIN
+        value: https://ituzaingo-coworking.onrender.com
+      # Las claves se cargan una vez desde el Dashboard y no se regeneran:
+      # PERSONAL_DATA_KEY cifra datos personales ya persistidos.
+      - key: JWT_SECRET
+        sync: false
+      - key: PERSONAL_DATA_KEY
+        sync: false
+      # true: el sitio se publica por HTTPS.
+      - key: COOKIE_SECURE
+        value: 'true'
+      # En Render el disco es efímero: sin este flag la API no arranca cuando
+      # no hay datos. Los datos reales requieren un disco (plan pago) o el
+      # despliegue en VPS de REQ-01.
+      - key: SEED_ON_START
+        value: 'true'
+      # Resuelto contra el cwd del workspace (apps/api), igual que en local.
+      - key: DATA_DIR
+        value: ./data
